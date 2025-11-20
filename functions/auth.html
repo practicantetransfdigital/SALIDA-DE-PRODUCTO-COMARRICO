@@ -1,21 +1,5 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-
 <script>
-// ============================================================
-// VARIABLES GLOBALES
-// ============================================================
-
-let usuarioActual = null;
-let datosCompletos = null;
-let charts = {};
-let timeoutIds = [];
-let registroActual = null;
-let pestaniaActual = 'detalles';
-
-// ============================================================
-// FUNCIONES DE AUTENTICACIÓN - CORREGIDAS
-// ============================================================
-
+    
 function iniciarSesion() {
   const usuario = document.getElementById('usuario').value.trim();
   const contrasena = document.getElementById('contrasena').value;
@@ -47,7 +31,7 @@ function iniciarSesion() {
 }
 
 function respuestaLogin(resultado) {
-  mostrarLoading(false);
+  mostrarLoading(false); // Ocultar loading del login
   
   if (resultado && resultado.success) {
     usuarioActual = resultado;
@@ -55,7 +39,14 @@ function respuestaLogin(resultado) {
     document.getElementById('userRole').textContent = resultado.rol;
     document.getElementById('userRole').className = 'badge badge-info';
     
+    // Cambiar a la pantalla principal PRIMERO
     cambiarPantalla('mainScreen');
+    
+    // MOSTRAR LOADING inmediatamente en la pantalla principal
+    mostrarLoading(true);
+    
+    // LUEGO cargar el dashboard
+    console.log('🚀 Iniciando carga inmediata del dashboard...');
     cargarDashboard();
     
     // Limpiar formulario de login
@@ -82,6 +73,7 @@ function cerrarSesion() {
   
   usuarioActual = null;
   datosCompletos = null;
+  mostrarNotificacion('Sesión cerrada correctamente', 'info')
   cambiarPantalla('loginScreen');
 }
 </script>

@@ -1,0 +1,39 @@
+<script>
+
+function cargarTabla(registros) {
+  const tbody = document.getElementById('tablaRegistrosBody');
+  if (!tbody) {
+    console.error('❌ No se encontró el tbody de la tabla');
+    return;
+  }
+  
+  tbody.innerHTML = '';
+  
+  if (!registros || registros.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--gray-400); padding: 40px;">No hay registros disponibles</td></tr>';
+    return;
+  }
+  
+  registros.forEach(registro => {
+    const tr = document.createElement('tr');
+    const estadoBadge = obtenerBadgeEstado(registro.Estado);
+    
+    tr.innerHTML = `
+      <td><strong>${registro.Código || '-'}</strong></td>
+      <td>${registro['NombreProducto'] || '-'}</td>
+      <td>${registro['Tipo de Salida'] || '-'}</td>
+      <td>${formatearFecha(registro['Fecha y Hora de Retiro'])}</td>
+      <td>${registro.Responsable || '-'}</td>
+      <td><span class="badge ${estadoBadge}">${registro.Estado || '-'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="verDetalle(${registro.ID || 0})">
+          <i class="fas fa-eye"></i> Ver
+        </button>
+      </td>
+    `;
+    
+    tbody.appendChild(tr);
+  });
+}
+
+</script>

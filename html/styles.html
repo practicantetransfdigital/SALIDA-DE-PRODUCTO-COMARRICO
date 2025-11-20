@@ -102,6 +102,7 @@ body {
   font-weight: 600;
   color: var(--gray-900);
   margin-bottom: 8px;
+  margin-top: -25px;
 }
 
 .logo p {
@@ -110,43 +111,50 @@ body {
 }
 
 .login-image {
-  background: linear-gradient(135deg, var(--primary-yellow) 0%, #F59E0B 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  position: relative;
-  overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Imagen de fondo en pseudo-elemento para aplicar blur solo a ella */
 .login-image::before {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  top: -100px;
-  right: -100px;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url(https://mecaluxco.cdnwm.com/blog/img/muelles-carga-logistica-salida.1.10.jpg?imwidth=1024&imdensity=1);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(4px); /* Blur solo en la imagen */
+    -webkit-filter: blur(4px);
+    z-index: 1;
 }
 
+/* Capa oscura semitransparente sobre la imagen difuminada */
+.login-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4); /* Capa oscura para mejor contraste */
+    z-index: 2;
+}
+
+/* Contenido sobrepuesto - SIN desenfoque */
 .login-image-content {
-  position: relative;
-  z-index: 1;
-  color: var(--white);
-  text-align: center;
-}
-
-.login-image-content h2 {
-  font-size: 32px;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-.login-image-content p {
-  font-size: 16px;
-  opacity: 0.95;
-  line-height: 1.8;
+    position: relative;
+    z-index: 3; /* Por encima de ambas capas */
+    color: var(--white);
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* ============================================================
@@ -382,6 +390,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
+  margin-bottom: 10px;
 }
 
 /* ============================================================
@@ -565,7 +574,7 @@ tbody tr:hover {
 }
 
 .modal-footer {
-  padding: 24px;
+  padding: 10px;
   border-top: 1px solid var(--gray-200);
   display: flex;
   justify-content: flex-end;
@@ -708,7 +717,7 @@ tbody tr:hover {
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--gray-200);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .tab-btn {
@@ -749,7 +758,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
-  padding: 0 50px;
+  padding: 0 50px 20px;
 }
 
 .detalle-grupo {
@@ -852,6 +861,7 @@ textarea.form-control {
   padding: 20px;
   border: 1px solid var(--gray-200);
   margin-top: 24px;
+  margin-bottom: 24px;
 }
 
 .resumen-cambio h4 {
@@ -932,6 +942,134 @@ textarea.form-control {
   .cambio-estado .fas.fa-arrow-right {
     transform: rotate(90deg);
   }
+}
+
+/* ============================================================
+   HISTORIAL DE OBSERVACIONES
+   ============================================================ */
+
+.historial-container {
+  max-width: 100%;
+}
+
+.historial-container h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 25px 25px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.lista-observaciones {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 25px;
+}
+
+.observacion-item {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 0 27px 27px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
+}
+
+.observacion-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.observacion-item:last-child {
+  margin-bottom: 0;
+}
+
+.observacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cambio-estado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.observacion-fecha {
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.observacion-texto {
+  background: var(--gray-50);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0 8px;
+  border-left: 3px solid var(--primary-yellow);
+}
+
+.observacion-texto p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.observacion-vacia {
+  font-style: italic;
+  color: var(--gray-500);
+  font-size: 13px;
+}
+
+/* Mensajes de estado */
+.cargando-historial, .sin-observaciones {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-500);
+}
+
+.mensaje-vacio i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.mensaje-vacio p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.mensaje-vacio small {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Scrollbar personalizado */
+.lista-observaciones::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lista-observaciones::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 3px;
+}
+
+.lista-observaciones::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+.lista-observaciones::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
 }
 
 </style>

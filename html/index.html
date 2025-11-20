@@ -17,9 +17,9 @@
           <div class="logo">
             <!-- Reemplazando emoji con icono Font Awesome -->
             <div class="logo-icon">
-              <i class="fas fa-boxes"></i>
+              <img src="https://comarrico.com/wp-content/uploads/2018/02/Logo-menu-comarrico.png" alt="COMARRICO" style="width: 160px;">
             </div>
-            <h1>Sistema de Salidas</h1>
+            <h1>Salida de Productos</h1>
             <p>Gestión de Productos</p>
           </div>
           
@@ -59,9 +59,8 @@
     <!-- NAVBAR -->
     <nav class="navbar">
       <div class="navbar-brand">
-        <!-- Reemplazando emoji con icono -->
-        <i class="fas fa-boxes navbar-icon"></i>
-        <span>Sistema de Salidas</span>
+        <img src="https://comarrico.com/wp-content/uploads/2018/02/Logo-menu-comarrico.png" alt="COMARRICO" style="width: 50px;">
+        <H3>SDP</H3>
       </div>
       <div class="navbar-user">
         <i class="fas fa-user-circle" style="font-size: 20px; color: var(--gray-600);"></i>
@@ -79,7 +78,7 @@
       <div class="content-header">
         <div>
           <h2>Salida de productos - COMARRICO</h2>
-          <p>Resumen y estadísticas de salidas de producto</p>
+          <p>Resumen y estadísticas de las salidas de los productos en comarrico</p>
         </div>
         <div style="display: flex; gap: 12px;">
           <!-- Agregando botón de refrescar sutil -->
@@ -149,7 +148,7 @@
         </div>
         
         <div class="chart-card">
-          <h3><i class="fas fa-map-marker-alt"></i> Pasillos con Mayor Frecuencia</h3>
+          <h3><i class="fas fa-map-marker-alt"></i> Zonas con Mayor Frecuencia</h3>
           <canvas id="chartPasillo"></canvas>
         </div>
         
@@ -166,13 +165,13 @@
           <table id="tablaRegistros">
             <thead>
               <tr>
-                <th><i class="fas fa-barcode"></i> Código</th>
-                <th><i class="fas fa-file-alt"></i> Descripción</th>
-                <th><i class="fas fa-tag"></i> Tipo de Salida</th>
-                <th><i class="fas fa-calendar"></i> Fecha</th>
-                <th><i class="fas fa-user"></i> Responsable</th>
-                <th><i class="fas fa-flag"></i> Estado</th>
-                <th><i class="fas fa-cog"></i> Acciones</th>
+                <th><i class="fas fa-barcode"></i>  Código</th>
+                <th><i class="fas fa-box"></i>  Producto</th>
+                <th><i class="fas fa-tag"></i>  Tipo de Salida</th>
+                <th><i class="fas fa-calendar"></i>  Fecha</th>
+                <th><i class="fas fa-user"></i>  Responsable</th>
+                <th><i class="fas fa-flag"></i>  Estado</th>
+                <th><i class="fas fa-cog"></i>  Acciones</th>
               </tr>
             </thead>
             <tbody id="tablaRegistrosBody">
@@ -198,7 +197,12 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="codigo"><i class="fas fa-barcode"></i> Código de Producto *</label>
-            <input type="text" id="codigo" placeholder="Ej: PROD-001" required>
+            <input type="text" id="codigo" placeholder="Ingrese el Número" required>
+          </div>
+
+          <div class="form-group">
+            <label for="nombreproducto"><i class="fas fa-box"></i> Nombre del producto *</label>
+            <input type="text" id="nombreproducto" placeholder="" required>
           </div>
           
           <div class="form-group">
@@ -227,13 +231,13 @@
           
           <div class="form-group">
             <label for="pasillo"><i class="fas fa-map-marker-alt"></i> Pasillo/Ubicación *</label>
-            <input type="text" id="pasillo" placeholder="Ej: A-12" required>
+            <input type="text" id="pasillo" placeholder="Ingrese la ubicación" required>
           </div>
           
-          <div class="form-group">
-            <label for="tiempoRetorno"><i class="fas fa-clock"></i> Tiempo Estimado de Retorno</label>
-            <input type="text" id="tiempoRetorno" placeholder="Ej: 2 días">
-          </div>
+<div class="form-group">
+  <label for="fechaRetorno"><i class="fas fa-calendar-day"></i> Fecha Estimada de Retorno *</label>
+  <input type="date" id="fechaRetorno" required>
+</div>
           
           <div class="form-group">
             <label for="estado"><i class="fas fa-flag"></i> Estado *</label>
@@ -261,7 +265,7 @@
     <p>Cargando...</p>
   </div>
   
-  <!-- MODAL PARA VER DETALLES Y EDITAR ESTADO -->
+<!-- MODAL PARA VER DETALLES, EDITAR ESTADO Y VER HISTORIAL -->
 <div id="modalDetalles" class="modal">
   <div class="modal-content modal-large">
     <div class="modal-header">
@@ -272,13 +276,16 @@
     </div>
     
     <div class="modal-body">
-      <!-- Pestañas para Detalles y Edición -->
+      <!-- Pestañas para Detalles, Edición e Historial -->
       <div class="tabs">
         <button class="tab-btn active" onclick="cambiarPestania('detalles')">
           <i class="fas fa-info-circle"></i> Detalles
         </button>
         <button class="tab-btn" onclick="cambiarPestania('editar')">
           <i class="fas fa-edit"></i> Editar Estado
+        </button>
+        <button class="tab-btn" onclick="cambiarPestania('historial')">
+          <i class="fas fa-history"></i> Historial
         </button>
       </div>
       
@@ -295,6 +302,10 @@
             <div class="detalle-item">
               <label>Código:</label>
               <span id="detalleCodigo" class="valor-detalle">-</span>
+            </div>
+            <div class="detalle-item">
+              <label>Nombre del Producto:</label>
+              <span id="detalleNombre" class="valor-detalle">-</span>
             </div>
             <div class="detalle-item">
               <label>Descripción:</label>
@@ -320,21 +331,21 @@
           </div>
           
           <!-- Responsable y Ubicación -->
-          <div class="detalle-grupo">
-            <h3><i class="fas fa-user-location"></i> Responsable y Ubicación</h3>
-            <div class="detalle-item">
-              <label>Responsable:</label>
-              <span id="detalleResponsable" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Pasillo/Ubicación:</label>
-              <span id="detallePasillo" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Tiempo Estimado de Retorno:</label>
-              <span id="detalleTiempoRetorno" class="valor-detalle">-</span>
-            </div>
-          </div>
+<div class="detalle-grupo">
+  <h3><i class="fas fa-location-arrow"></i> Responsable y Ubicación</h3>
+  <div class="detalle-item">
+    <label>Responsable:</label>
+    <span id="detalleResponsable" class="valor-detalle">-</span>
+  </div>
+  <div class="detalle-item">
+    <label>Pasillo/Ubicación:</label>
+    <span id="detallePasillo" class="valor-detalle">-</span>
+  </div>
+  <div class="detalle-item">
+    <label>Estado de Vencimiento:</label>
+    <span id="detalleEstadoVencimiento" class="valor-detalle">-</span>
+  </div>
+</div>
           
           <!-- Fechas -->
           <div class="detalle-grupo">
@@ -347,6 +358,10 @@
               <label>Registrado hace:</label>
               <span id="detalleTiempoTranscurrido" class="valor-detalle">-</span>
             </div>
+              <div class="detalle-item">
+    <label>Fecha Estimada de Retorno:</label>
+    <span id="detalleFechaRetorno" class="valor-detalle">-</span>
+  </div>
           </div>
         </div>
       </div>
@@ -381,6 +396,27 @@
           </div>
         </div>
       </div>
+      
+      <!-- Contenido de Historial -->
+      <div id="contenidoHistorial" class="tab-content">
+        <div class="historial-container">
+          <h3><i class="fas fa-exchange-alt"></i> Historial de Cambios de Estado</h3>
+          
+          <div id="listaObservaciones" class="lista-observaciones">
+            <div class="cargando-historial">
+              <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+            </div>
+          </div>
+          
+          <div id="sinObservaciones" class="sin-observaciones" style="display: none;">
+            <div class="mensaje-vacio">
+              <i class="fas fa-inbox"></i>
+              <p>No hay cambios de estado registrados</p>
+              <small>Los cambios que realices aparecerán aquí</small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="modal-footer">
@@ -394,15 +430,42 @@
   </div>
 </div>
 
-  <?!= HtmlService.createHtmlOutputFromFile('functions/Auxiliars').getContent(); ?>
-  <?!= HtmlService.createHtmlOutputFromFile('functions/Dashboard').getContent(); ?>
-  <?!= HtmlService.createHtmlOutputFromFile('functions/Form').getContent(); ?>
-  <?!= HtmlService.createHtmlOutputFromFile('functions/global').getContent(); ?>
+<!-- MODAL CONFIRMACIÓN SIMPLE -->
+<div id="modalConfirmar" class="modal">
+  <div class="modal-content modal-small">
+    <div class="modal-body">
+      <div style="text-align: center;padding: 30px; margin-top: -40px;">
+        <i class="fas fa-question-circle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
+        <h3 style="margin-bottom: 16px; color: var(--gray-800);">Confirmar Cambio</h3>
+        <p id="confirmarMensaje" style="color: var(--gray-600); margin-bottom: 24px; line-height: 1.5;">
+          ¿Está seguro de realizar esta acción?
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="cancelarConfirmacion()">
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+      <button type="button" class="btn btn-primary" onclick="aceptarConfirmacion()">
+        <i class="fas fa-check"></i> Aceptar
+      </button>
+    </div>
+  </div>
+</div>
+
+  <?!= HtmlService.createHtmlOutputFromFile('functions/auth').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/auxiliars').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/confirmation').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/dashboard').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/details').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/editstate').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/Functform').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/grafics').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/initialization').getContent(); ?>
-  <?!= HtmlService.createHtmlOutputFromFile('functions/state').getContent(); ?>
-
+  <?!= HtmlService.createHtmlOutputFromFile('functions/notifications').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/observations').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/tablehistory').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/variables').getContent(); ?>
   
-
 </body>
 </html>

@@ -1,0 +1,25 @@
+<script>
+    
+function confirmar(mensaje) {
+  return new Promise((resolve) => {
+    document.getElementById('confirmarMensaje').textContent = mensaje;
+    confirmacionResolve = resolve;
+    document.getElementById('modalConfirmar').classList.add('active');
+  });
+}
+
+function aceptarConfirmacion() {
+  if (confirmacionResolve) {
+    confirmacionResolve(true);
+  }
+  document.getElementById('modalConfirmar').classList.remove('active');
+}
+
+function cancelarConfirmacion() {
+  if (confirmacionResolve) {
+    confirmacionResolve(false);
+  }
+  document.getElementById('modalConfirmar').classList.remove('active');
+}
+
+</script>

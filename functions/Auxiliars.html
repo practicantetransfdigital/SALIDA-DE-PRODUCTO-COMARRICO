@@ -1,9 +1,18 @@
 <script>
-    function cambiarPantalla(idPantalla) {
+
+function cambiarPantalla(idPantalla) {
   document.querySelectorAll('.screen').forEach(screen => {
     screen.classList.remove('active');
   });
   document.getElementById(idPantalla).classList.add('active');
+  
+  // Si cambiamos a la pantalla principal y ya tenemos datos, actualizar la UI
+  if (idPantalla === 'mainScreen' && datosCompletos) {
+    console.log('🔄 Actualizando UI con datos existentes...');
+    actualizarEstadisticas(datosCompletos.estadisticas || {});
+    crearGraficos(datosCompletos.estadisticas || {});
+    cargarTabla((datosCompletos.estadisticas && datosCompletos.estadisticas.ultimosRegistros) || []);
+  }
 }
 
 function mostrarLoading(mostrar) {
@@ -31,47 +40,44 @@ function limpiarError() {
   }
 }
 
+function formatearFechaSimple(fecha) {
+  if (!fecha) return '-';
+  
+  try {
+    // Si ya es una fecha formateada, devolverla tal cual
+    if (typeof fecha === 'string' && fecha.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      return fecha;
+    }
+    
+    // CORRECCIÓN: Manejar diferentes formatos de fecha
+    let fechaObj;
+    if (fecha.includes('T')) {
+      // Si viene con timezone, usar directamente
+      fechaObj = new Date(fecha);
+    } else {
+      // Si es solo fecha, agregar tiempo para evitar problemas de zona horaria
+      fechaObj = new Date(fecha + 'T00:00:00');
+    }
+    
+    if (isNaN(fechaObj.getTime())) return fecha;
+    
+    const dia = String(fechaObj.getDate()).padStart(2, '0');
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const año = fechaObj.getFullYear();
+    
+    return `${dia}/${mes}/${año}`;
+  } catch (error) {
+    return fecha;
+  }
+}
+
+
 function errorServidor(error) {
   mostrarLoading(false);
   console.error('❌ Error del servidor:', error);
   mostrarNotificacion('Error del servidor: ' + (error.message || 'Error desconocido'), 'error');
 }
 
-function mostrarNotificacion(mensaje, tipo = 'info') {
-  // Crear notificación temporal
-  const notificacion = document.createElement('div');
-  notificacion.className = `notificacion notificacion-${tipo}`;
-  notificacion.innerHTML = `
-    <div class="notificacion-contenido">
-      <span class="notificacion-mensaje">${mensaje}</span>
-      <button class="notificacion-cerrar" onclick="this.parentElement.parentElement.remove()">×</button>
-    </div>
-  `;
-  
-  // Estilos básicos para notificación
-  notificacion.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${tipo === 'error' ? '#F56565' : tipo === 'success' ? '#48BB78' : tipo === 'warning' ? '#ED8936' : '#4299E1'};
-    color: white;
-    padding: 12px 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10000;
-    max-width: 400px;
-    animation: slideIn 0.3s ease-out;
-  `;
-  
-  document.body.appendChild(notificacion);
-  
-  // Auto-remover después de 5 segundos
-  setTimeout(() => {
-    if (notificacion.parentElement) {
-      notificacion.remove();
-    }
-  }, 5000);
-}
 
 function obtenerBadgeEstado(estado) {
   const badges = {
@@ -110,52 +116,23 @@ function formatearFecha(fecha) {
   }
 }
 
-function verDetalle(id) {
-  if (!datosCompletos || !datosCompletos.registros) {
-    mostrarNotificacion('No hay datos disponibles para mostrar', 'warning');
-    return;
-  }
+function obtenerBadgeEstado(estado) {
+  const badges = {
+    'En Revisión': 'badge-warning',
+    'Devuelto': 'badge-success',
+    'Pendiente por Devolución': 'badge-info',
+    'Procesado': 'badge-info',
+    'Destruido': 'badge-error',
+    'Vencido': 'badge-error'
+  };
   
-  const registro = datosCompletos.registros.find(r => r.ID === id);
-  if (registro) {
-    const detalles = `
-ID: ${registro.ID || '-'}
-Código: ${registro.Código || '-'}
-Descripción: ${registro.Descripción || '-'}
-Tipo de Salida: ${registro['Tipo de Salida'] || '-'}
-Tipo de Plaga: ${registro['Tipo de Plaga/Hallazgo'] || 'N/A'}
-Fecha: ${formatearFecha(registro['Fecha y Hora de Retiro'])}
-Responsable: ${registro.Responsable || '-'}
-Pasillo: ${registro['Pasillo/Ubicación'] || '-'}
-Estado: ${registro.Estado || '-'}
-    `.trim();
-    
-    alert('Detalles del Registro:\n\n' + detalles);
-  } else {
-    mostrarNotificacion('No se encontró el registro solicitado', 'error');
-  }
+  return badges[estado] || 'badge-info';
 }
 
-function cambiarPestania(pestania) {
-  pestaniaActual = pestania;
-  
-  // Actualizar botones de pestañas
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-  
-  // Activar pestaña seleccionada
-  event.target.classList.add('active');
-  document.getElementById('contenido' + pestania.charAt(0).toUpperCase() + pestania.slice(1)).classList.add('active');
-  
-  // Actualizar texto del botón guardar
-  const btnGuardar = document.getElementById('btnGuardarCambio');
-  if (pestania === 'detalles') {
-    btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar Cambio';
-    btnGuardar.style.display = 'none';
-  } else {
-    btnGuardar.innerHTML = '<i class="fas fa-save"></i> Actualizar Estado';
-    btnGuardar.style.display = 'inline-flex';
-  }
+function cerrarModalDetalles() {
+  document.getElementById('modalDetalles').classList.remove('active');
+  registroActual = null;
+  pestaniaActual = 'detalles';
 }
 
 function calcularTiempoTranscurrido(fecha) {
@@ -181,10 +158,150 @@ function calcularTiempoTranscurrido(fecha) {
   }
 }
 
-function cerrarModalDetalles() {
-  document.getElementById('modalDetalles').classList.remove('active');
-  registroActual = null;
-  pestaniaActual = 'detalles';
+function calcularEstadoVencimiento(fechaRetorno, estadoActual) {
+  if (!fechaRetorno || estadoActual === 'Devuelto' || estadoActual === 'Destruido' || estadoActual === 'Procesado') {
+    return { texto: 'No aplica', clase: 'badge-info' };
+  }
+  
+  try {
+    // CORRECCIÓN: Manejar fecha correctamente
+    let fecha;
+    if (fechaRetorno.includes('T')) {
+      fecha = new Date(fechaRetorno);
+    } else {
+      fecha = new Date(fechaRetorno + 'T00:00:00');
+    }
+    
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const diferencia = fecha - hoy;
+    const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
+    
+    if (dias < 0) {
+      return { texto: 'VENCIDO', clase: 'badge-error' };
+    } else if (dias === 0) {
+      return { texto: 'Vence hoy', clase: 'badge-warning' };
+    } else if (dias <= 2) {
+      return { texto: `Vence en ${dias} día${dias > 1 ? 's' : ''}`, clase: 'badge-warning' };
+    } else if (dias <= 7) {
+      return { texto: `Vence en ${dias} días`, clase: 'badge-info' };
+    } else {
+      return { texto: `Vence en ${dias} días`, clase: 'badge-success' };
+    }
+  } catch (error) {
+    return { texto: 'Error cálculo', clase: 'badge-error' };
+  }
+}
+
+// Función para verificar vencimientos automáticamente
+function verificarVencimientos() {
+  if (!datosCompletos || !datosCompletos.registros) return;
+  
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  
+  let vencidos = 0;
+  let porVencerHoy = 0;
+  let porVencerProximos = 0;
+  
+  datosCompletos.registros.forEach(registro => {
+    if (registro.Estado !== 'Devuelto' && registro.Estado !== 'Destruido' && registro.Estado !== 'Procesado') {
+      // CORREGIDO: usar "Tiempo Estimado de Retorno"
+      const fechaRetorno = new Date(registro['Tiempo Estimado de Retorno']);
+      
+      if (fechaRetorno < hoy) {
+        vencidos++;
+      } else if (fechaRetorno.getTime() === hoy.getTime()) {
+        porVencerHoy++;
+      } else if (fechaRetorno <= new Date(hoy.getTime() + 2 * 24 * 60 * 60 * 1000)) { // Próximos 2 días
+        porVencerProximos++;
+      }
+    }
+  });
+  
+  // Mostrar notificaciones agrupadas en una sola si hay múltiples alertas
+  const alertas = [];
+  
+  if (vencidos > 0) {
+    alertas.push(`⚠️ ${vencidos} salida${vencidos > 1 ? 's' : ''} vencida${vencidos > 1 ? 's' : ''}`);
+  }
+  
+  if (porVencerHoy > 0) {
+    alertas.push(`📅 ${porVencerHoy} salida${porVencerHoy > 1 ? 's' : ''} vence${porVencerHoy > 1 ? 'n' : ''} hoy`);
+  }
+  
+  if (porVencerProximos > 0) {
+    alertas.push(`⏳ ${porVencerProximos} salida${porVencerProximos > 1 ? 's' : ''} vence${porVencerProximos > 1 ? 'n' : ''} en 2 días`);
+  }
+  
+  // Mostrar una sola notificación con todas las alertas
+  if (alertas.length > 0) {
+    const mensaje = `Alertas de vencimiento:\n${alertas.join('\n')}`;
+    mostrarNotificacion(mensaje, 'warning');
+  }
+}
+
+function configurarAutocompletado() {
+  const codigoInput = document.getElementById('codigo');
+  const nombreInput = document.getElementById('nombreproducto');
+  
+  codigoInput.addEventListener('input', function() {
+    const codigo = this.value.trim().toUpperCase();
+    
+    if (productosBase[codigo]) {
+      // Si el código existe, autocompletar nombre
+      nombreInput.value = productosBase[codigo];
+    } else if (codigo === '') {
+      // Si se borra el código, limpiar nombre
+      nombreInput.value = '';
+    }
+    // Si no existe, dejar que el usuario escriba manualmente
+  });
+  
+  // También autocompletar al perder el foco (por si acaso)
+  codigoInput.addEventListener('blur', function() {
+    const codigo = this.value.trim().toUpperCase();
+    if (productosBase[codigo] && !nombreInput.value) {
+      nombreInput.value = productosBase[codigo];
+    }
+  });
+}
+
+function buscarProducto(codigo) {
+  codigo = codigo.trim().toUpperCase();
+  
+  // Búsqueda exacta
+  if (productosBase[codigo]) {
+    return productosBase[codigo];
+  }
+  
+  // Búsqueda por coincidencia parcial
+  for (let key in productosBase) {
+    if (key.includes(codigo) || codigo.includes(key)) {
+      return productosBase[key];
+    }
+  }
+  
+  return null;
+}
+
+function llenarSelect(selectId, opciones) {
+  const select = document.getElementById(selectId);
+  if (!select || !opciones || !Array.isArray(opciones)) {
+    console.error(`❌ No se pudo llenar select ${selectId}`, opciones);
+    return;
+  }
+  
+  // Limpiar opciones existentes (excepto la primera si existe)
+  select.innerHTML = '';
+  
+  opciones.forEach(opcion => {
+    const option = document.createElement('option');
+    option.value = opcion;
+    option.textContent = opcion;
+    select.appendChild(option);
+  });
 }
 
 </script>

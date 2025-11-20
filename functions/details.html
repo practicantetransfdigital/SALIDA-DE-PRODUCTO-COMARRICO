@@ -1,0 +1,123 @@
+<script>
+
+function verDetalle(id) {
+  if (!datosCompletos || !datosCompletos.registros) {
+    mostrarNotificacion('No hay datos disponibles para mostrar', 'warning');
+    return;
+  }
+  
+  const registro = datosCompletos.registros.find(r => r.ID === id);
+  if (registro) {
+    const detalles = `
+ID: ${registro.ID || '-'}
+Código: ${registro.Código || '-'}
+Tipo de Salida: ${registro['NombreProducto'] || '-'}
+Descripción: ${registro.Descripción || '-'}
+Tipo de Salida: ${registro['Tipo de Salida'] || '-'}
+Tipo de Plaga: ${registro['Tipo de Plaga/Hallazgo'] || 'N/A'}
+Fecha: ${formatearFecha(registro['Fecha y Hora de Retiro'])}
+Responsable: ${registro.Responsable || '-'}
+Pasillo: ${registro['Pasillo/Ubicación'] || '-'}
+Estado: ${registro.Estado || '-'}
+    `.trim();
+    
+    alert('Detalles del Registro:\n\n' + detalles);
+  } else {
+    mostrarNotificacion('No se encontró el registro solicitado', 'error');
+  }
+}
+
+function verDetalle(id) {
+  if (!datosCompletos || !datosCompletos.registros) {
+    mostrarNotificacion('No hay datos disponibles para mostrar', 'warning');
+    return;
+  }
+  
+  const registro = datosCompletos.registros.find(r => r.ID === id);
+  
+  if (!registro) {
+    mostrarNotificacion('No se encontró el registro solicitado', 'error');
+    return;
+  }
+  
+  registroActual = registro;
+  cargarOpcionesEstado(); // Cargar opciones para edición
+  mostrarModalDetalles(registro);
+}
+
+function mostrarModalDetalles(registro) {
+  console.log('📋 Mostrando detalles del registro:', registro);
+  
+  // Actualizar título con código
+  document.getElementById('tituloCodigo').textContent = registro.Código || 'Sin código';
+  
+  // Llenar información de detalles
+  llenarDetallesRegistro(registro);
+  
+  // Configurar estado actual para edición - CORREGIDO: eliminar .clase
+  const estadoActual = registro.Estado || 'Desconocido';
+  document.getElementById('estadoActualTexto').textContent = estadoActual;
+  document.getElementById('estadoActualTexto').className = 'badge ' + obtenerBadgeEstado(estadoActual);
+  
+  // Resetear formulario de edición
+  document.getElementById('editarEstado').value = '';
+  document.getElementById('editarObservaciones').value = '';
+  document.getElementById('estadoNuevoTexto').textContent = 'Seleccione estado';
+  document.getElementById('estadoNuevoTexto').className = 'badge badge-info';
+  
+  // Mostrar pestaña de detalles por defecto
+  cambiarPestania('detalles');
+  
+  // Mostrar modal
+  document.getElementById('modalDetalles').classList.add('active');
+}
+
+function llenarDetallesRegistro(registro) {
+  console.log('📋 Llenando detalles del registro:', registro);
+  
+  // Información básica
+  document.getElementById('detalleId').textContent = registro.ID || '-';
+  document.getElementById('detalleCodigo').textContent = registro.Código || '-';
+  document.getElementById('detalleNombre').textContent = registro['NombreProducto'] || '-';
+  document.getElementById('detalleDescripcion').textContent = registro.Descripción || '-';
+  
+  // Clasificación
+  document.getElementById('detalleTipoSalida').textContent = registro['Tipo de Salida'] || '-';
+  document.getElementById('detalleTipoPlaga').textContent = registro['Tipo de Plaga/Hallazgo'] || 'N/A';
+  
+  // Estado - CORREGIDO: usar solo el estado sin fecha para el badge principal
+  const estadoElement = document.getElementById('detalleEstado');
+  const estado = registro.Estado || '-';
+  estadoElement.textContent = estado;
+  estadoElement.className = 'badge ' + obtenerBadgeEstado(estado);
+  
+  // Responsable y ubicación
+  document.getElementById('detalleResponsable').textContent = registro.Responsable || '-';
+  document.getElementById('detallePasillo').textContent = registro['Pasillo/Ubicación'] || '-';
+  
+  // Fecha de retorno y estado de vencimiento - VERIFICAR QUE EXISTAN LOS ELEMENTOS
+  const fechaRetorno = registro['Tiempo Estimado de Retorno'] || '-';
+  const detalleFechaRetorno = document.getElementById('detalleFechaRetorno');
+  const detalleEstadoVencimiento = document.getElementById('detalleEstadoVencimiento');
+  
+  if (detalleFechaRetorno) {
+    detalleFechaRetorno.textContent = formatearFechaSimple(fechaRetorno);
+  }
+  
+  if (detalleEstadoVencimiento) {
+    const estadoVencimiento = calcularEstadoVencimiento(fechaRetorno, estado);
+    detalleEstadoVencimiento.textContent = estadoVencimiento.texto;
+    detalleEstadoVencimiento.className = 'badge ' + estadoVencimiento.clase;
+  }
+  
+  // Fechas
+  const fechaRetiro = registro['Fecha y Hora de Retiro'] || registro.Fecha;
+  document.getElementById('detalleFecha').textContent = formatearFecha(fechaRetiro);
+  document.getElementById('detalleTiempoTranscurrido').textContent = calcularTiempoTranscurrido(fechaRetiro);
+  
+  // Debug: verificar que los datos se están cargando
+  console.log('📅 Fecha de retorno cargada:', fechaRetorno);
+  console.log('🏷️ Estado cargado:', estado);
+}
+
+</script>

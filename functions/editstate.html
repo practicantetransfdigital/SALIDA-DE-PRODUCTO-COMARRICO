@@ -1,5 +1,6 @@
 <script>
-    function cargarOpcionesEstado() {
+
+function cargarOpcionesEstado() {
   const selectEstado = document.getElementById('editarEstado');
   selectEstado.innerHTML = '<option value="">Seleccione nuevo estado...</option>';
   
@@ -15,14 +16,14 @@
     selectEstado.appendChild(option);
   });
   
-  // Event listener para actualizar vista previa
+  // Event listener para actualizar vista previa - CORREGIDO: eliminar .clase
   selectEstado.addEventListener('change', function() {
     const nuevoEstado = this.value;
     const estadoNuevoElement = document.getElementById('estadoNuevoTexto');
     
     if (nuevoEstado) {
       estadoNuevoElement.textContent = nuevoEstado;
-      estadoNuevoElement.className = 'badge ' + obtenerBadgeEstado(nuevoEstado).clase;
+      estadoNuevoElement.className = 'badge ' + obtenerBadgeEstado(nuevoEstado);
     } else {
       estadoNuevoElement.textContent = 'Seleccione estado';
       estadoNuevoElement.className = 'badge badge-info';
@@ -30,12 +31,13 @@
   });
 }
 
-function guardarCambioEstado() {
+async function guardarCambioEstado() {
   if (!registroActual) {
     mostrarNotificacion('No hay registro seleccionado', 'error');
     return;
   }
-  
+
+  const confirmado = await confirmar(`¿Está seguro de cambiar el estado?`);
   const nuevoEstado = document.getElementById('editarEstado').value;
   const observaciones = document.getElementById('editarObservaciones').value.trim();
   
@@ -49,17 +51,39 @@ function guardarCambioEstado() {
     return;
   }
   
-  // Confirmar cambio
-  if (!confirm(`¿Está seguro de cambiar el estado de "${registroActual.Estado}" a "${nuevoEstado}"?`)) {
-    return;
+  if (!confirmado) {
+  return;
   }
   
   mostrarLoading(true);
+
+  const nombreUser = usuarioActual.nombre;
   
   google.script.run
-    .withSuccessHandler(respuestaCambioEstado)
-    .withFailureHandler(errorCambioEstado)
-    .actualizarEstadoRegistro(registroActual.ID, nuevoEstado, observaciones);
+    .withSuccessHandler(function(resultado) {
+      mostrarLoading(false);
+      
+      if (resultado && resultado.success) {
+        mostrarNotificacion('✅ Estado actualizado correctamente', 'success');
+        
+        // Recargar datos y mostrar historial actualizado
+        cargarDashboard();
+        
+        // Si estamos en la pestaña de historial, recargarla
+        if (pestaniaActual === 'historial') {
+          cargarHistorialObservaciones(registroActual.ID);
+        }
+        
+        cerrarModalDetalles();
+      } else {
+        mostrarNotificacion('❌ Error al actualizar estado: ' + (resultado?.message || 'Error desconocido'), 'error');
+      }
+    })
+    .withFailureHandler(function(error) {
+      mostrarLoading(false);
+      mostrarNotificacion('❌ Error del servidor: ' + error.message, 'error');
+    })
+    .actualizarEstadoRegistro(registroActual.ID, nuevoEstado, observaciones, nombreUser);
 }
 
 function respuestaCambioEstado(resultado) {
@@ -78,4 +102,5 @@ function errorCambioEstado(error) {
   mostrarLoading(false);
   mostrarNotificacion('❌ Error del servidor: ' + error.message, 'error');
 }
+
 </script>

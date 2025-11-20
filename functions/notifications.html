@@ -1,0 +1,76 @@
+<script>
+
+function mostrarNotificacion(mensaje, tipo = 'info') {
+  // Obtener todas las notificaciones existentes
+  const notificacionesExistentes = document.querySelectorAll('.notificacion');
+  
+  // Calcular posición desde arriba (20px + altura de notificaciones anteriores)
+  let topPosition = 20;
+  notificacionesExistentes.forEach(notif => {
+    topPosition += notif.offsetHeight + 10; // 10px de separación
+  });
+  
+  // Crear notificación temporal
+  const notificacion = document.createElement('div');
+  notificacion.className = `notificacion notificacion-${tipo}`;
+  
+  notificacion.innerHTML = `
+    <div class="notificacion-contenido">
+      <span class="notificacion-mensaje">${mensaje}</span>
+      <button class="notificacion-cerrar" onclick="cerrarNotificacion(this.parentElement.parentElement)">×</button>
+    </div>
+  `;
+  
+  // Estilos mejorados para notificación
+  notificacion.style.cssText = `
+    position: fixed;
+    top: ${topPosition}px;
+    right: 20px;
+    background: ${tipo === 'error' ? '#F56565' : tipo === 'success' ? '#48BB78' : tipo === 'warning' ? '#ED8936' : '#4299E1'};
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease-out;
+    transition: all 0.3s ease;
+  `;
+  
+  document.body.appendChild(notificacion);
+  
+  // Auto-remover después de 5 segundos
+  setTimeout(() => {
+    cerrarNotificacion(notificacion);
+  }, 5000);
+}
+
+// Función para cerrar notificaciones y reorganizar las demás
+function cerrarNotificacion(notificacion) {
+  if (notificacion && notificacion.parentElement) {
+    // Animación de salida
+    notificacion.style.transform = 'translateX(100%)';
+    notificacion.style.opacity = '0';
+    
+    setTimeout(() => {
+      if (notificacion.parentElement) {
+        notificacion.remove();
+        // Reorganizar las notificaciones restantes
+        reorganizarNotificaciones();
+      }
+    }, 300);
+  }
+}
+
+// Función para reorganizar notificaciones después de cerrar una
+function reorganizarNotificaciones() {
+  const notificaciones = document.querySelectorAll('.notificacion');
+  let topPosition = 20;
+  
+  notificaciones.forEach(notif => {
+    notif.style.top = `${topPosition}px`;
+    topPosition += notif.offsetHeight + 10; // 10px de separación
+  });
+}
+
+</script>

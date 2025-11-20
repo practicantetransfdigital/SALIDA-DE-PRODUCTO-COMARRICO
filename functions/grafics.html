@@ -1,18 +1,4 @@
 <script>
-    function actualizarEstadisticas(stats) {
-  if (!stats) {
-    console.warn('⚠️ Stats es null o undefined');
-    stats = {
-      totalSalidas: 0,
-      porEstado: {}
-    };
-  }
-  
-  document.getElementById('totalSalidas').textContent = stats.totalSalidas || 0;
-  document.getElementById('enRevision').textContent = (stats.porEstado && stats.porEstado['En Revisión']) || 0;
-  document.getElementById('devueltos').textContent = (stats.porEstado && stats.porEstado['Devuelto']) || 0;
-  document.getElementById('pendientes').textContent = (stats.porEstado && stats.porEstado['Pendiente por Devolución']) || 0;
-}
 
 function crearGraficos(stats) {
   if (!stats) {
@@ -60,21 +46,65 @@ function crearGraficos(stats) {
   );
   
   // Gráfico de Tipo de Plaga
-  crearGraficoIndividual(
-    'chartTipoPlaga',
-    'bar',
-    stats.porTipoPlaga,
-    ['#FDB913'],
-    {
-      ...commonOptions,
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 }
+crearGraficoIndividual(
+  'chartTipoPlaga',
+  'bar',
+  stats.porTipoPlaga,
+  ['#FDB913'],
+  {
+    ...commonOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { 
+          stepSize: 1,
+          font: {
+            size: 11
+          }
+        }
+      },
+      x: {
+        ticks: {
+          font: {
+            size: 10, // Un poco más pequeño para que quepan más
+            family: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+          },
+          maxRotation: 45, // Inclinar 45 grados para que quepan más
+          minRotation: 45, // Forzar inclinación
+          autoSkip: false, // ← IMPORTANTE: Mostrar todas las etiquetas
+          includeBounds: true,
+          callback: function(value, index) {
+            // value es el índice, necesitamos los labels originales
+            const labels = this.chart.data.labels;
+            const originalLabel = labels[index];
+            
+            if (!originalLabel) return '';
+            
+            // Limitar a 10 caracteres máximo (más corto para que quepan más)
+            const maxChars = 10;
+            if (originalLabel.length > maxChars) {
+              return originalLabel.substring(0, maxChars - 3) + '...';
+            }
+            return originalLabel;
+          }
+        },
+        // Ajustar el grid para que quepan más etiquetas
+        grid: {
+          offset: true
         }
       }
+    },
+    // Ajustar el layout para mejor espacio
+    layout: {
+      padding: {
+        left: 10,
+        right: 10,
+        top: 10,
+        bottom: 20
+      }
     }
-  );
+  }
+);
   
   // Gráfico de Pasillo
   crearGraficoIndividual(
@@ -111,30 +141,59 @@ function crearGraficoIndividual(canvasId, tipo, datos, colores, opciones) {
     return;
   }
   
-  // Limpiar canvas anterior
   const parent = canvas.parentElement;
+  
+  const canvasExistente = document.getElementById(canvasId);
+  if (canvasExistente) {
+    canvasExistente.remove();
+  }
+  
+  const mensajesAnteriores = parent.querySelectorAll('.no-data-message, .error-message');
+  mensajesAnteriores.forEach(msg => msg.remove());
+
+  if (charts[canvasId]) {
+    charts[canvasId].destroy();
+  }
+
   const nuevoCanvas = document.createElement('canvas');
   nuevoCanvas.id = canvasId;
+  
   nuevoCanvas.style.width = '100%';
   nuevoCanvas.style.height = '300px';
-  parent.innerHTML = '';
+  nuevoCanvas.style.minHeight = '300px';
+  nuevoCanvas.style.maxHeight = '300px';
+  
   parent.appendChild(nuevoCanvas);
   
   if (!datos || Object.keys(datos).length === 0) {
-    parent.innerHTML += '<p style="text-align: center; color: var(--gray-400); padding: 40px;">No hay datos disponibles</p>';
+    const mensajeDiv = document.createElement('div');
+    mensajeDiv.className = 'no-data-message';
+    mensajeDiv.innerHTML = '<p>No hay datos disponibles</p>';
+    mensajeDiv.style.height = '300px';
+    mensajeDiv.style.display = 'flex';
+    mensajeDiv.style.alignItems = 'center';
+    mensajeDiv.style.justifyContent = 'center';
+    parent.appendChild(mensajeDiv);
     return;
   }
   
-  // CORRECCIÓN ESPECIAL PARA PLAGAS: Filtrar valores cero o nulos
   const datosFiltrados = {};
   Object.keys(datos).forEach(key => {
     if (datos[key] > 0) {
       datosFiltrados[key] = datos[key];
     }
+    console.log(`🔍 Etiquetas para ${canvasId}:`, Object.keys(datos));
   });
   
   if (Object.keys(datosFiltrados).length === 0) {
-    parent.innerHTML += '<p style="text-align: center; color: var(--gray-400); padding: 40px;">No hay datos de plagas registradas</p>';
+    const mensajeDiv = document.createElement('div');
+    mensajeDiv.className = 'no-data-message';
+    mensajeDiv.innerHTML = '<p>No hay datos disponibles</p>';
+    mensajeDiv.style.height = '300px';
+    mensajeDiv.style.display = 'flex';
+    mensajeDiv.style.alignItems = 'center';
+    mensajeDiv.style.justifyContent = 'center';
+    parent.appendChild(mensajeDiv);
     return;
   }
   
@@ -145,96 +204,60 @@ function crearGraficoIndividual(canvasId, tipo, datos, colores, opciones) {
       type: tipo,
       data: {
         labels: Object.keys(datosFiltrados),
-        datasets: [{
-          label: canvasId === 'chartTipoPlaga' ? 'Tipos de Plaga' : (tipo === 'bar' ? 'Cantidad' : ''),
-          data: Object.values(datosFiltrados),
-          backgroundColor: colores,
-          borderWidth: 2,
-          borderColor: '#fff',
-          borderRadius: tipo === 'bar' ? 8 : 0
-        }]
+datasets: [{
+  label: obtenerLabelGrafico(canvasId, tipo),
+  data: Object.values(datosFiltrados),
+  backgroundColor: colores,
+  borderWidth: 2,
+  borderColor: '#fff',
+  borderRadius: tipo === 'bar' ? 8 : 0
+}]
       },
-      options: opciones
+      options: {
+        ...opciones,
+        responsive: true,
+        maintainAspectRatio: false
+      }
     });
   } catch (error) {
     console.error(`❌ Error creando gráfico ${canvasId}:`, error);
-    parent.innerHTML += '<p style="text-align: center; color: var(--error); padding: 20px;">Error al crear gráfico</p>';
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.innerHTML = '<p>Error al crear gráfico</p>';
+    errorDiv.style.height = '300px';
+    errorDiv.style.display = 'flex';
+    errorDiv.style.alignItems = 'center';
+    errorDiv.style.justifyContent = 'center';
+    parent.appendChild(errorDiv);
   }
 }
 
-function cargarTabla(registros) {
-  const tbody = document.getElementById('tablaRegistrosBody');
-  if (!tbody) {
-    console.error('❌ No se encontró el tbody de la tabla');
-    return;
-  }
+// Función para obtener la leyenda correcta de cada gráfico
+function obtenerLabelGrafico(canvasId, tipo) {
+  const labels = {
+    'chartTipoSalida': 'Tipos de Salida',
+    'chartTipoPlaga': 'Cantidad',  
+    'chartPasillo': 'Cantidad',    
+    'chartEstado': 'Estados'
+  };
   
-  tbody.innerHTML = '';
-  
-  if (!registros || registros.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--gray-400); padding: 40px;">No hay registros disponibles</td></tr>';
-    return;
-  }
-  
-  registros.forEach(registro => {
-    const tr = document.createElement('tr');
-    const estadoBadge = obtenerBadgeEstado(registro.Estado);
-    
-    tr.innerHTML = `
-      <td><strong>${registro.Código || '-'}</strong></td>
-      <td>${registro.Descripción || '-'}</td>
-      <td>${registro['Tipo de Salida'] || '-'}</td>
-      <td>${formatearFecha(registro['Fecha y Hora de Retiro'])}</td>
-      <td>${registro.Responsable || '-'}</td>
-      <td><span class="badge ${estadoBadge}">${registro.Estado || '-'}</span></td>
-      <td>
-        <button class="btn btn-sm btn-secondary" onclick="verDetalle(${registro.ID || 0})">
-          <i class="fas fa-eye"></i> Ver
-        </button>
-      </td>
-    `;
-    
-    tbody.appendChild(tr);
-  });
+  // Si no está en la lista, usar valor por defecto
+  return labels[canvasId] || (tipo === 'bar' ? 'Cantidad' : '');
 }
 
-function cargarOpcionesFormulario() {
-  google.script.run
-    .withSuccessHandler((opciones) => {
-      if (!opciones || typeof opciones !== 'object') {
-        console.error('❌ Opciones inválidas:', opciones);
-        return;
-      }
-      
-      llenarSelect('tipoSalida', opciones.tiposSalida);
-      llenarSelect('tipoPlaga', opciones.tiposPlagas);
-      llenarSelect('estado', opciones.estados);
-    })
-    .withFailureHandler((error) => {
-      console.error('❌ Error al cargar opciones:', error);
-      // Usar opciones por defecto
-      llenarSelect('tipoSalida', ['Control de Calidad', 'Gasificación', 'Destrucción', 'Para Revisión', 'Reproceso', 'Devolución a Proveedor', 'Otro']);
-      llenarSelect('tipoPlaga', ['N/A', 'Insectos', 'Roedores', 'Hongos', 'Contaminación', 'Otro']);
-      llenarSelect('estado', ['En Revisión', 'Devuelto', 'Pendiente por Devolución', 'Procesado', 'Destruido']);
-    })
-    .obtenerOpciones();
-}
-
-function llenarSelect(selectId, opciones) {
-  const select = document.getElementById(selectId);
-  if (!select || !opciones || !Array.isArray(opciones)) {
-    console.error(`❌ No se pudo llenar select ${selectId}`, opciones);
-    return;
+function actualizarEstadisticas(stats) {
+  if (!stats) {
+    console.warn('⚠️ Stats es null o undefined');
+    stats = {
+      totalSalidas: 0,
+      porEstado: {}
+    };
   }
   
-  // Limpiar opciones existentes (excepto la primera si existe)
-  select.innerHTML = '';
-  
-  opciones.forEach(opcion => {
-    const option = document.createElement('option');
-    option.value = opcion;
-    option.textContent = opcion;
-    select.appendChild(option);
-  });
+  document.getElementById('totalSalidas').textContent = stats.totalSalidas || 0;
+  document.getElementById('enRevision').textContent = (stats.porEstado && stats.porEstado['En Revisión']) || 0;
+  document.getElementById('devueltos').textContent = (stats.porEstado && stats.porEstado['Devuelto']) || 0;
+  document.getElementById('pendientes').textContent = (stats.porEstado && stats.porEstado['Pendiente por Devolución']) || 0;
 }
+
 </script>

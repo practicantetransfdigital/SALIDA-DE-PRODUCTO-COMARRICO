@@ -1,0 +1,141 @@
+<script>
+
+function cambiarPestania(pestania) {
+  pestaniaActual = pestania;
+  
+  // Actualizar botones de pestañas
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  
+  // Activar pestaña seleccionada
+  event.target.classList.add('active');
+  document.getElementById('contenido' + pestania.charAt(0).toUpperCase() + pestania.slice(1)).classList.add('active');
+  
+  // Cargar historial si es la pestaña de historial
+  if (pestania === 'historial' && registroActual) {
+    cargarHistorialObservaciones(registroActual.ID);
+  }
+  
+  // Actualizar botón guardar
+  const btnGuardar = document.getElementById('btnGuardarCambio');
+  if (pestania === 'editar') {
+    btnGuardar.innerHTML = '<i class="fas fa-save"></i> Actualizar Estado';
+    btnGuardar.style.display = 'inline-flex';
+  } else {
+    btnGuardar.style.display = 'none';
+  }
+}
+
+function cargarHistorialObservaciones(idRegistro) {
+  console.log('📋 Cargando historial para ID:', idRegistro);
+  
+  const contenedor = document.getElementById('listaObservaciones');
+  const sinObservaciones = document.getElementById('sinObservaciones');
+  
+  // Mostrar loading
+  contenedor.innerHTML = '<div class="cargando-historial"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</div>';
+  sinObservaciones.style.display = 'none';
+  
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      console.log('📦 Respuesta del historial:', resultado);
+      
+      // ✅ CORRECCIÓN: Manejar respuesta null o undefined
+      if (!resultado) {
+        console.error('❌ Respuesta null del servidor');
+        mostrarErrorHistorial('No se recibió respuesta del servidor');
+        return;
+      }
+      
+      // Si es string, parsear JSON
+      if (typeof resultado === 'string') {
+        try {
+          resultado = JSON.parse(resultado);
+        } catch (e) {
+          console.error('❌ Error parseando JSON:', e);
+          mostrarErrorHistorial('Error en formato de respuesta');
+          return;
+        }
+      }
+      
+      // ✅ CORRECCIÓN: Verificar success
+      if (resultado.success === false) {
+        console.error('❌ Error del servidor:', resultado.message);
+        mostrarErrorHistorial(resultado.message || 'Error del servidor');
+        return;
+      }
+      
+      if (resultado.success === true) {
+        if (resultado.observaciones && resultado.observaciones.length > 0) {
+          mostrarObservaciones(resultado.observaciones);
+        } else {
+          mostrarSinObservaciones();
+        }
+      } else {
+        console.error('❌ Respuesta sin propiedad success:', resultado);
+        mostrarErrorHistorial('Formato de respuesta inválido');
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error('❌ Error cargando historial:', error);
+      mostrarErrorHistorial('Error de conexión: ' + error.message);
+    })
+    .obtenerObservacionesRegistro(idRegistro);
+}
+
+function mostrarErrorHistorial(mensaje) {
+  const contenedor = document.getElementById('listaObservaciones');
+  const sinObservaciones = document.getElementById('sinObservaciones');
+  
+  contenedor.innerHTML = `
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>${mensaje}</p>
+      <small>Intente recargar la página</small>
+    </div>
+  `;
+  sinObservaciones.style.display = 'none';
+}
+
+function mostrarObservaciones(observaciones) {
+  const contenedor = document.getElementById('listaObservaciones');
+  const sinObservaciones = document.getElementById('sinObservaciones');
+  
+  let html = '';
+  
+  observaciones.forEach(obs => {
+    html += `
+      <div class="observacion-item">
+        <div class="observacion-header">
+          <div class="cambio-estado">
+            <span class="badge ${obtenerBadgeEstado(obs.estadoAnterior)}">${obs.estadoAnterior}</span>
+            <i class="fas fa-arrow-right" style="color: var(--gray-400); font-size: 12px;"></i>
+            <span class="badge ${obtenerBadgeEstado(obs.estadoNuevo)}">${obs.estadoNuevo}</span>
+          </div>
+          <div class="observacion-fecha">${formatearFecha(obs.fecha)}</div>
+        </div>
+        ${obs.observaciones && String(obs.observaciones).trim() !== '' ? `
+          <div class="observacion-texto">
+            <p>${obs.observaciones}</p>
+          </div>
+        ` : '<div class="observacion-vacia">Sin observaciones</div>'}
+        <div class="observacion-usuario">
+          <small><i class="fas fa-user"></i> ${obs.usuario || 'Sistema'}</small>
+        </div>
+      </div>
+    `;
+  });
+  
+  contenedor.innerHTML = html;
+  sinObservaciones.style.display = 'none';
+}
+
+function mostrarSinObservaciones() {
+  const contenedor = document.getElementById('listaObservaciones');
+  const sinObservaciones = document.getElementById('sinObservaciones');
+  
+  contenedor.innerHTML = '';
+  sinObservaciones.style.display = 'block';
+}
+
+</script>

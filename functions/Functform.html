@@ -1,11 +1,28 @@
 <script>
-    function abrirModalRegistro() {
+    
+function abrirModalRegistro() {
   document.getElementById('modalRegistro').classList.add('active');
   document.getElementById('formRegistro').reset();
   
   // Establecer valores por defecto
   document.getElementById('estado').value = 'En Revisión';
   document.getElementById('tipoPlaga').value = 'N/A';
+  
+  // Establecer fecha mínima como hoy para el campo de fecha
+  const fechaInput = document.getElementById('fechaRetorno');
+  if (fechaInput) {
+    const hoy = new Date();
+    
+    // CORRECCIÓN: Formatear fecha correctamente para input type="date"
+    const fechaHoy = hoy.toISOString().split('T')[0];
+    fechaInput.min = fechaHoy;
+    
+    // Establecer fecha por defecto (3 días después)
+    const fechaDefecto = new Date();
+    fechaDefecto.setDate(hoy.getDate() + 3);
+    const fechaDefectoStr = fechaDefecto.toISOString().split('T')[0];
+    fechaInput.value = fechaDefectoStr;
+  }
 }
 
 function cerrarModalRegistro() {
@@ -25,45 +42,60 @@ function cerrarModalRegistro() {
 function guardarRegistro(event) {
   if (event) event.preventDefault();
   
-  // DESHABILITAR el botón para evitar doble clic
   const btnGuardar = document.querySelector('#formRegistro button[type="submit"]');
   const textoOriginal = btnGuardar.innerHTML;
   btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
   btnGuardar.disabled = true;
   
+  // Validar que el campo de fecha existe
+  const fechaRetornoInput = document.getElementById('fechaRetorno');
+  if (!fechaRetornoInput) {
+    mostrarNotificacion('Error: Campo de fecha no encontrado', 'error');
+    btnGuardar.innerHTML = textoOriginal;
+    btnGuardar.disabled = false;
+    return;
+  }
+  
+  // Validar fecha de retorno
+  const fechaRetornoValor = fechaRetornoInput.value;
+  if (!fechaRetornoValor) {
+    mostrarNotificacion('La fecha de retorno es requerida', 'error');
+    btnGuardar.innerHTML = textoOriginal;
+    btnGuardar.disabled = false;
+    return;
+  }
+  
+  // CORRECCIÓN: Manejar fecha correctamente sin problemas de zona horaria
+  const fechaRetorno = new Date(fechaRetornoValor + 'T00:00:00'); // Agregar tiempo para evitar ajuste de zona horaria
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  
+  if (fechaRetorno < hoy) {
+    mostrarNotificacion('La fecha de retorno no puede ser anterior a hoy', 'error');
+    btnGuardar.innerHTML = textoOriginal;
+    btnGuardar.disabled = false;
+    return;
+  }
+  
+  // CORRECCIÓN: Enviar la fecha en formato YYYY-MM-DD sin problemas de zona horaria
   const datos = {
     'Código': document.getElementById('codigo').value.trim(),
+    'NombreProducto': document.getElementById('nombreproducto').value.trim(),
     'Descripción': document.getElementById('descripcion').value.trim(),
     'Tipo de Salida': document.getElementById('tipoSalida').value,
     'Tipo de Plaga/Hallazgo': document.getElementById('tipoPlaga').value,
     'Responsable': document.getElementById('responsable').value.trim(),
     'Pasillo/Ubicación': document.getElementById('pasillo').value.trim(),
-    'Tiempo Estimado de Retorno': document.getElementById('tiempoRetorno').value,
+    'Fecha Estimada de Retorno': fechaRetornoValor, // Enviar el valor original del input
     'Estado': document.getElementById('estado').value
   };
   
   // Validar campos requeridos
-  const camposRequeridos = ['Código', 'Descripción', 'Tipo de Salida', 'Responsable', 'Pasillo/Ubicación', 'Estado'];
+  const camposRequeridos = ['Código', 'NombreProducto', 'Descripción', 'Tipo de Salida', 'Responsable', 'Pasillo/Ubicación', 'Fecha Estimada de Retorno', 'Estado'];
   const camposFaltantes = camposRequeridos.filter(campo => !datos[campo]);
   
   if (camposFaltantes.length > 0) {
-    mostrarNotificacion('Por favor complete todos los campos requeridos: ' + camposFaltantes.join(', '), 'error');
-    // REHABILITAR botón
-    btnGuardar.innerHTML = textoOriginal;
-    btnGuardar.disabled = false;
-    return;
-  }
-  
-  // Validar longitudes
-  if (datos['Código'].length > 50) {
-    mostrarNotificacion('El código no puede tener más de 50 caracteres', 'error');
-    btnGuardar.innerHTML = textoOriginal;
-    btnGuardar.disabled = false;
-    return;
-  }
-  
-  if (datos['Descripción'].length > 200) {
-    mostrarNotificacion('La descripción no puede tener más de 200 caracteres', 'error');
+    mostrarNotificacion('Por favor complete todos los campos requeridos', 'error');
     btnGuardar.innerHTML = textoOriginal;
     btnGuardar.disabled = false;
     return;
@@ -160,5 +192,27 @@ function errorGuardar(error, btnGuardar, textoOriginal) {
   
   console.error('❌ Error del servidor:', error);
   mostrarNotificacion('Error del servidor: ' + (error.message || 'Error desconocido'), 'error');
+}
+
+function cargarOpcionesFormulario() {
+  google.script.run
+    .withSuccessHandler((opciones) => {
+      if (!opciones || typeof opciones !== 'object') {
+        console.error('❌ Opciones inválidas:', opciones);
+        return;
+      }
+      
+      llenarSelect('tipoSalida', opciones.tiposSalida);
+      llenarSelect('tipoPlaga', opciones.tiposPlagas);
+      llenarSelect('estado', opciones.estados);
+    })
+    .withFailureHandler((error) => {
+      console.error('❌ Error al cargar opciones:', error);
+      // Usar opciones por defecto incluyendo "Vencido"
+      llenarSelect('tipoSalida', ['Control de Calidad', 'Gasificación', 'Destrucción', 'Para Revisión', 'Reproceso', 'Devolución a Proveedor', 'Otro']);
+      llenarSelect('tipoPlaga', ['N/A', 'Insectos', 'Roedores', 'Hongos', 'Contaminación', 'Otro']);
+      llenarSelect('estado', ['En Revisión', 'Devuelto', 'Pendiente por Devolución', 'Procesado', 'Destruido', 'Vencido']);
+    })
+    .obtenerOpciones();
 }
 </script>

@@ -1,7 +1,12 @@
-
+// ============================================================
+// BACKEND - VERSIÓN CON MÁXIMA COMPATIBILIDAD
+// ============================================================
 
 const SPREADSHEET_ID = '1VG8G0rYpXQ9yPk8zcV4qZrxbSDf8u8Cfb3XWsgKffvY';
 
+// ============================================================
+// FUNCIONES BÁSICAS CON MÁXIMA ESTABILIDAD
+// ============================================================
 
 function getSpreadsheet() {
   try {
@@ -97,7 +102,7 @@ function obtenerDatosDashboard() {
   Logger.log('📊 INICIANDO: obtenerDatosDashboard');
   
   try {
-    var sheet = getSheet('SALIDAS');
+    var sheet = getSheet('SALIDAS', true);
     var lastRow = sheet.getLastRow();
     var lastColumn = sheet.getLastColumn();
     
@@ -129,16 +134,16 @@ function obtenerDatosDashboard() {
     
     var registros = [];
     
-    // Procesar registros
+    // Procesar registros con nueva estructura
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
       if (row[0] && row[0].toString().trim() !== '') { // Si tiene ID válido
         var registro = {};
         for (var j = 0; j < headers.length; j++) {
           var headerName = headers[j];
-          // Asegurar compatibilidad con frontend
+          // Corregir nombre de fecha para coincidir con frontend
           if (headerName === 'Fecha') {
-            registro['Fecha y Hora de Retiro'] = formatDateForFrontend(row[j]);
+            registro['Fecha y Hora de Retiro'] = row[j];
           } else {
             registro[headerName] = row[j];
           }
@@ -159,7 +164,7 @@ function obtenerDatosDashboard() {
       total: registros.length,
       debug: {
         timestamp: new Date().toISOString(),
-        version: '2.0-stable'
+        version: '2.0-con-nombre'
       }
     };
     
@@ -236,7 +241,7 @@ function calcularEstadisticas(registros) {
   }
   
   // Últimos 10 registros (más recientes primero)
-  var ultimosCount = Math.min(10, registros.length);
+  var ultimosCount = Math.min(20, registros.length);
   for (var i = registros.length - ultimosCount; i < registros.length; i++) {
     stats.ultimosRegistros.unshift(registros[i]);
   }
@@ -256,7 +261,6 @@ function registrarSalida(datos) {
     var lastRow = sheet.getLastRow();
     var nuevoID = 1;
     
-    // Calcular nuevo ID
     if (lastRow > 1) {
       var lastID = sheet.getRange(lastRow, 1).getValue();
       nuevoID = parseInt(lastID) + 1;
@@ -264,37 +268,70 @@ function registrarSalida(datos) {
     
     Logger.log('🆕 Nuevo ID: ' + nuevoID);
     
-    // Formatear fecha
+    // Formatear fechas
     var fechaActual = new Date();
     var fechaFormateada = Utilities.formatDate(fechaActual, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    
+    // CORRECCIÓN: Manejar fecha de retorno correctamente
+    var fechaRetorno = datos['Fecha Estimada de Retorno'];
+    var fechaRetornoFormateada = '';
+    
+    if (fechaRetorno) {
+      try {
+        // Usar la fecha directamente sin conversiones que puedan cambiar la zona horaria
+        var fechaRetornoObj = new Date(fechaRetorno + 'T00:00:00');
+        fechaRetornoFormateada = Utilities.formatDate(fechaRetornoObj, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+        Logger.log('📅 Fecha de retorno procesada: ' + fechaRetornoFormateada);
+      } catch (e) {
+        Logger.log('❌ Error formateando fecha de retorno: ' + e.toString());
+        fechaRetornoFormateada = fechaRetorno; // Guardar como string si hay error
+      }
+    }
+    
+    // Determinar estado inicial (verificar si ya está vencido)
+    var estado = datos['Estado'] || 'En Revisión';
+    if (fechaRetorno) {
+      try {
+        var fechaRetornoDate = new Date(fechaRetorno + 'T00:00:00');
+        var hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        
+        if (fechaRetornoDate < hoy) {
+          estado = 'Vencido';
+          Logger.log('⚠️ Registro marcado como Vencido automáticamente');
+        }
+      } catch (e) {
+        Logger.log('❌ Error verificando vencimiento: ' + e.toString());
+      }
+    }
     
     var nuevaFila = [
       nuevoID,
       (datos['Código'] || '').toString().trim(),
+      (datos['NombreProducto'] || '').toString().trim(),
       (datos['Descripción'] || '').toString().trim(),
       datos['Tipo de Salida'] || '',
       datos['Tipo de Plaga/Hallazgo'] || 'N/A',
       fechaFormateada,
       (datos['Responsable'] || '').toString().trim(),
       datos['Pasillo/Ubicación'] || '',
-      datos['Tiempo Estimado de Retorno'] || '',
-      datos['Estado'] || 'En Revisión'
+      fechaRetornoFormateada,
+      estado
     ];
     
     Logger.log('📝 Insertando fila: ' + JSON.stringify(nuevaFila));
     sheet.appendRow(nuevaFila);
     
-    // ✅ CORRECCIÓN: Devolver OBJETO directamente, NO string JSON
     return {
       success: true,
       message: 'Salida registrada correctamente',
-      id: nuevoID
+      id: nuevoID,
+      estado: estado
     };
     
   } catch (error) {
     Logger.log('❌ ERROR registrando salida: ' + error.toString());
     
-    // ✅ CORRECCIÓN: Devolver OBJETO directamente
     return {
       success: false,
       message: 'Error al registrar: ' + error.message
@@ -303,94 +340,139 @@ function registrarSalida(datos) {
 }
 
 // ============================================================
-// OBTENER OPCIONES
-// ============================================================
-
-function obtenerOpciones() {
-  return {
-    success: true,
-    tiposSalida: [
-      'Control de Calidad',
-      'Gasificación',
-      'Destrucción',
-      'Para Revisión',
-      'Reproceso',
-      'Devolución a Proveedor',
-      'Otro'
-    ],
-    tiposPlagas: [
-      'N/A',
-      'Insectos',
-      'Roedores',
-      'Hongos',
-      'Contaminación',
-      'Otro'
-    ],
-    estados: [
-      'En Revisión',
-      'Devuelto',
-      'Pendiente por Devolución',
-      'Procesado',
-      'Destruido'
-    ]
-  };
-}
-
-// ============================================================
 // FUNCIONES DE DIAGNÓSTICO
 // ============================================================
 
-function testConexionBasica() {
+function actualizarEstadoRegistro(id, nuevoEstado, observaciones, usuario = 'Sistema') {
   try {
-    var spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheets = spreadsheet.getSheets();
-    var sheetNames = sheets.map(function(sheet) {
-      return {
-        name: sheet.getName(),
-        rows: sheet.getLastRow(),
-        cols: sheet.getLastColumn()
-      };
-    });
+    const sheet = getSheet('SALIDAS');
+    const data = sheet.getDataRange().getValues();
     
-    return JSON.stringify({
-      success: true,
-      message: 'Conexión exitosa',
-      spreadsheet: spreadsheet.getName(),
-      sheets: sheetNames
-    });
-  } catch (error) {
-    return JSON.stringify({
-      success: false,
-      message: 'Error: ' + error.message
-    });
-  }
-}
-
-function actualizarEstadoRegistro(id, nuevoEstado, observaciones) {
-  try {
-    var sheet = getSheet('SALIDAS');
-    var data = sheet.getDataRange().getValues();
+    let estadoAnterior = '';
+    let filaIndex = -1;
     
-    // Buscar la fila con el ID
-    for (var i = 1; i < data.length; i++) {
+    // Buscar la fila con el ID y obtener estado anterior
+    for (let i = 1; i < data.length; i++) {
       if (data[i][0] == id) {
-        // Actualizar estado (columna 10, índice 9)
-        sheet.getRange(i + 1, 10).setValue(nuevoEstado);
-        
-        // Opcional: Guardar observaciones en una columna adicional o log
-        if (observaciones) {
-          // Si tienes una columna para observaciones, guárdalas aquí
-          // sheet.getRange(i + 1, 11).setValue(observaciones);
-        }
-        
-        Logger.log(`✅ Estado actualizado: ID ${id} -> ${nuevoEstado}`);
-        return { success: true, message: 'Estado actualizado correctamente' };
+        estadoAnterior = data[i][10] || 'Desconocido'; 
+        filaIndex = i + 1;
+        break;
       }
     }
     
-    return { success: false, message: 'No se encontró el registro' };
+    if (filaIndex === -1) {
+      return { success: false, message: 'No se encontró el registro' };
+    }
+    
+    // Actualizar estado en hoja SALIDAS (columna 11, índice 10)
+    sheet.getRange(filaIndex, 11).setValue(nuevoEstado);
+    
+    // Guardar observación en hoja OBSERVACIONES
+    const resultadoObservacion = guardarObservacion(
+      id, 
+      estadoAnterior, 
+      nuevoEstado, 
+      observaciones,
+      usuario
+    );
+    
+    Logger.log(`✅ Estado actualizado: ID ${id} - ${estadoAnterior} → ${nuevoEstado} por ${usuario}`);
+    
+    return { 
+      success: true, 
+      message: 'Estado actualizado correctamente',
+      idObservacion: resultadoObservacion.id
+    };
+    
   } catch (error) {
     Logger.log('❌ Error actualizando estado: ' + error.toString());
     return { success: false, message: 'Error: ' + error.message };
+  }
+}
+
+function guardarObservacion(idRegistro, estadoAnterior, estadoNuevo, observaciones, usuario = 'Sistema') {
+  try {
+    const sheet = getSheet('OBSERVACIONES', true);
+    const lastRow = sheet.getLastRow();
+    const nuevoID = lastRow > 1 ? parseInt(sheet.getRange(lastRow, 1).getValue()) + 1 : 1;
+    
+    const fechaActual = new Date();
+    const fechaFormateada = Utilities.formatDate(fechaActual, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    
+    const nuevaFila = [
+      nuevoID,
+      idRegistro,
+      estadoAnterior,
+      estadoNuevo,
+      observaciones || '',
+      fechaFormateada,
+      usuario
+    ];
+    
+    sheet.appendRow(nuevaFila);
+    
+    Logger.log(`✅ Observación guardada: ID ${idRegistro} - ${estadoAnterior} → ${estadoNuevo}`);
+    return { success: true, id: nuevoID };
+    
+  } catch (error) {
+    Logger.log('❌ Error guardando observación: ' + error.toString());
+    return { success: false, message: 'Error: ' + error.message };
+  }
+}
+
+function obtenerObservacionesRegistro(idRegistro) {
+  try {
+    console.log('🔍 Buscando observaciones para ID:', idRegistro);
+    
+    const sheet = getSheet('OBSERVACIONES', true);
+    const data = sheet.getDataRange().getValues();
+    
+    console.log('📊 Total de filas en OBSERVACIONES:', data.length);
+    
+    // Si solo hay encabezados, retornar array vacío
+    if (data.length <= 1) {
+      console.log('ℹ️ No hay observaciones registradas');
+      return JSON.stringify({
+        success: true,
+        observaciones: []
+      });
+    }
+    
+    const observaciones = [];
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      // Verificar que la fila tenga datos y que el ID coincida
+      if (row[0] && row[1] && row[1].toString() === idRegistro.toString()) {
+        observaciones.push({
+          id: row[0],
+          idRegistro: row[1],
+          estadoAnterior: row[2] || 'Desconocido',
+          estadoNuevo: row[3] || 'Desconocido',
+          observaciones: row[4] || '',
+          fecha: row[5] || new Date().toISOString(),
+          usuario: row[6] || 'Sistema'
+        });
+      }
+    }
+    
+    console.log('✅ Observaciones encontradas:', observaciones.length);
+    
+    // Ordenar por fecha (más reciente primero)
+    observaciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    return JSON.stringify({
+      success: true,
+      observaciones: observaciones,
+      total: observaciones.length
+    });
+    
+  } catch (error) {
+    console.error('❌ ERROR en obtenerObservacionesRegistro:', error);
+    return JSON.stringify({
+      success: false,
+      message: 'Error al obtener observaciones: ' + error.message,
+      observaciones: []
+    });
   }
 }
