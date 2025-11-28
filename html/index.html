@@ -62,6 +62,20 @@
         <img src="https://comarrico.com/wp-content/uploads/2018/02/Logo-menu-comarrico.png" alt="COMARRICO" style="width: 50px;">
         <H3>SDP</H3>
       </div>
+      
+      <!-- Agregando menú de navegación con historial vencidos -->
+      <div class="navbar-menu">
+        <button class="nav-btn active" onclick="mostrarSeccion('dashboard')" id="btnDashboard">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" onclick="mostrarSeccion('vencidos')" id="btnVencidos">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Historial Vencidos</span>
+          <span class="badge-count" id="contadorVencidos" style="display: none;">0</span>
+        </button>
+      </div>
+      
       <div class="navbar-user">
         <i class="fas fa-user-circle" style="font-size: 20px; color: var(--gray-600);"></i>
         <span id="userName">Usuario</span>
@@ -72,8 +86,8 @@
       </div>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-content">
+    <!-- CONTENIDO PRINCIPAL - DASHBOARD -->
+    <main class="main-content" id="seccionDashboard">
       <!-- HEADER CON BOTÓN -->
       <div class="content-header">
         <div>
@@ -181,6 +195,115 @@
         </div>
       </div>
     </main>
+    
+    <!-- Nueva sección de Historial Vencidos -->
+    <main class="main-content" id="seccionVencidos" style="display: none;">
+      <!-- HEADER HISTORIAL VENCIDOS -->
+      <div class="content-header">
+        <div>
+          <h2><i class="fas fa-exclamation-triangle" style="color: var(--error);"></i> Historial de Vencidos</h2>
+          <p>Listado de productos con fecha de retorno vencida</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-icon" onclick="cargarHistorialVencidos()" title="Refrescar" style="background: var(--white); border: 1px solid var(--gray-200); padding: 10px 16px; border-radius: 8px;">
+            <i class="fas fa-sync-alt" style="color: var(--gray-600);"></i>
+          </button>
+          <div class="filtro-vencidos">
+            <select id="filtroVencidos" onchange="filtrarVencidos()" class="form-control-sm">
+              <option value="todos">Todos los vencidos</option>
+              <option value="hoy">Vencidos hoy</option>
+              <option value="semana">Última semana</option>
+              <option value="mes">Último mes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADÍSTICAS RÁPIDAS DE VENCIDOS -->
+      <div class="stats-grid stats-vencidos">
+        <div class="stat-card stat-card-danger">
+          <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15);">
+            <i class="fas fa-clock" style="color: var(--error);"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="totalVencidos">0</h3>
+            <p>Total Vencidos</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15);">
+            <i class="fas fa-hourglass-half" style="color: var(--warning);"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="vencidosEnRevision">0</h3>
+            <p>En Revisión</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15);">
+            <i class="fas fa-undo" style="color: var(--info);"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="vencidosPendientes">0</h3>
+            <p>Pend. Devolución</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1);">
+            <i class="fas fa-calendar-times" style="color: var(--error);"></i>
+          </div>
+          <div class="stat-content">
+            <h3 id="diasPromedioVencido">0</h3>
+            <p>Días Prom. Vencido</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA DE VENCIDOS -->
+      <div class="table-container">
+        <div class="table-header-actions">
+          <h3><i class="fas fa-list"></i> Registros Vencidos</h3>
+          <div class="busqueda-vencidos">
+            <i class="fas fa-search"></i>
+            <input type="text" id="buscarVencido" placeholder="Buscar por código o producto..." onkeyup="buscarEnVencidos()">
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="tablaVencidos">
+            <thead>
+              <tr>
+                <th><i class="fas fa-barcode"></i> Código</th>
+                <th><i class="fas fa-box"></i> Producto</th>
+                <th><i class="fas fa-tag"></i> Tipo Salida</th>
+                <th><i class="fas fa-calendar"></i> F. Retiro</th>
+                <th><i class="fas fa-calendar-times"></i> F. Retorno</th>
+                <th><i class="fas fa-hourglass-end"></i> Días Vencido</th>
+                <th><i class="fas fa-user"></i> Responsable</th>
+                <th><i class="fas fa-flag"></i> Estado</th>
+                <th><i class="fas fa-cog"></i> Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaVencidosBody">
+              <!-- Datos dinámicos -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Paginación -->
+        <div class="paginacion-container" id="paginacionVencidos">
+          <button class="btn-paginacion" onclick="paginaAnteriorVencidos()" id="btnAnteriorVencidos">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </button>
+          <span class="pagina-info" id="infoPaginaVencidos">Página 1 de 1</span>
+          <button class="btn-paginacion" onclick="paginaSiguienteVencidos()" id="btnSiguienteVencidos">
+            Siguiente <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </main>
   </div>
 
   <!-- MODAL DE REGISTRO -->
@@ -234,10 +357,10 @@
             <input type="text" id="pasillo" placeholder="Ingrese la ubicación" required>
           </div>
           
-<div class="form-group">
-  <label for="fechaRetorno"><i class="fas fa-calendar-day"></i> Fecha Estimada de Retorno *</label>
-  <input type="date" id="fechaRetorno" required>
-</div>
+          <div class="form-group">
+            <label for="fechaRetorno"><i class="fas fa-calendar-day"></i> Fecha Estimada de Retorno *</label>
+            <input type="date" id="fechaRetorno" required>
+          </div>
           
           <div class="form-group">
             <label for="estado"><i class="fas fa-flag"></i> Estado *</label>
@@ -265,194 +388,194 @@
     <p>Cargando...</p>
   </div>
   
-<!-- MODAL PARA VER DETALLES, EDITAR ESTADO Y VER HISTORIAL -->
-<div id="modalDetalles" class="modal">
-  <div class="modal-content modal-large">
-    <div class="modal-header">
-      <h2><i class="fas fa-eye"></i> Detalles de Salida - <span id="tituloCodigo">Código</span></h2>
-      <button class="modal-close" onclick="cerrarModalDetalles()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <div class="modal-body">
-      <!-- Pestañas para Detalles, Edición e Historial -->
-      <div class="tabs">
-        <button class="tab-btn active" onclick="cambiarPestania('detalles')">
-          <i class="fas fa-info-circle"></i> Detalles
-        </button>
-        <button class="tab-btn" onclick="cambiarPestania('editar')">
-          <i class="fas fa-edit"></i> Editar Estado
-        </button>
-        <button class="tab-btn" onclick="cambiarPestania('historial')">
-          <i class="fas fa-history"></i> Historial
+  <!-- MODAL PARA VER DETALLES, EDITAR ESTADO Y VER HISTORIAL -->
+  <div id="modalDetalles" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2><i class="fas fa-eye"></i> Detalles de Salida - <span id="tituloCodigo">Código</span></h2>
+        <button class="modal-close" onclick="cerrarModalDetalles()">
+          <i class="fas fa-times"></i>
         </button>
       </div>
       
-      <!-- Contenido de Detalles -->
-      <div id="contenidoDetalles" class="tab-content active">
-        <div class="detalles-grid">
-          <!-- Información Básica -->
-          <div class="detalle-grupo">
-            <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
-            <div class="detalle-item">
-              <label>ID de Registro:</label>
-              <span id="detalleId" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Código:</label>
-              <span id="detalleCodigo" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Nombre del Producto:</label>
-              <span id="detalleNombre" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Descripción:</label>
-              <span id="detalleDescripcion" class="valor-detalle">-</span>
-            </div>
-          </div>
-          
-          <!-- Tipo y Estado -->
-          <div class="detalle-grupo">
-            <h3><i class="fas fa-tags"></i> Clasificación</h3>
-            <div class="detalle-item">
-              <label>Tipo de Salida:</label>
-              <span id="detalleTipoSalida" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Tipo de Plaga/Hallazgo:</label>
-              <span id="detalleTipoPlaga" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Estado Actual:</label>
-              <span id="detalleEstado" class="badge">-</span>
-            </div>
-          </div>
-          
-          <!-- Responsable y Ubicación -->
-<div class="detalle-grupo">
-  <h3><i class="fas fa-location-arrow"></i> Responsable y Ubicación</h3>
-  <div class="detalle-item">
-    <label>Responsable:</label>
-    <span id="detalleResponsable" class="valor-detalle">-</span>
-  </div>
-  <div class="detalle-item">
-    <label>Pasillo/Ubicación:</label>
-    <span id="detallePasillo" class="valor-detalle">-</span>
-  </div>
-  <div class="detalle-item">
-    <label>Estado de Vencimiento:</label>
-    <span id="detalleEstadoVencimiento" class="valor-detalle">-</span>
-  </div>
-</div>
-          
-          <!-- Fechas -->
-          <div class="detalle-grupo">
-            <h3><i class="fas fa-calendar-alt"></i> Fechas</h3>
-            <div class="detalle-item">
-              <label>Fecha y Hora de Retiro:</label>
-              <span id="detalleFecha" class="valor-detalle">-</span>
-            </div>
-            <div class="detalle-item">
-              <label>Registrado hace:</label>
-              <span id="detalleTiempoTranscurrido" class="valor-detalle">-</span>
-            </div>
+      <div class="modal-body">
+        <!-- Pestañas para Detalles, Edición e Historial -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="cambiarPestania('detalles')">
+            <i class="fas fa-info-circle"></i> Detalles
+          </button>
+          <button class="tab-btn" onclick="cambiarPestania('editar')">
+            <i class="fas fa-edit"></i> Editar Estado
+          </button>
+          <button class="tab-btn" onclick="cambiarPestania('historial')">
+            <i class="fas fa-history"></i> Historial
+          </button>
+        </div>
+        
+        <!-- Contenido de Detalles -->
+        <div id="contenidoDetalles" class="tab-content active">
+          <div class="detalles-grid">
+            <!-- Información Básica -->
+            <div class="detalle-grupo">
+              <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
               <div class="detalle-item">
-    <label>Fecha Estimada de Retorno:</label>
-    <span id="detalleFechaRetorno" class="valor-detalle">-</span>
-  </div>
+                <label>ID de Registro:</label>
+                <span id="detalleId" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Código:</label>
+                <span id="detalleCodigo" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Nombre del Producto:</label>
+                <span id="detalleNombre" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Descripción:</label>
+                <span id="detalleDescripcion" class="valor-detalle">-</span>
+              </div>
+            </div>
+            
+            <!-- Tipo y Estado -->
+            <div class="detalle-grupo">
+              <h3><i class="fas fa-tags"></i> Clasificación</h3>
+              <div class="detalle-item">
+                <label>Tipo de Salida:</label>
+                <span id="detalleTipoSalida" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Tipo de Plaga/Hallazgo:</label>
+                <span id="detalleTipoPlaga" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Estado Actual:</label>
+                <span id="detalleEstado" class="badge">-</span>
+              </div>
+            </div>
+            
+            <!-- Responsable y Ubicación -->
+            <div class="detalle-grupo">
+              <h3><i class="fas fa-location-arrow"></i> Responsable y Ubicación</h3>
+              <div class="detalle-item">
+                <label>Responsable:</label>
+                <span id="detalleResponsable" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Pasillo/Ubicación:</label>
+                <span id="detallePasillo" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Estado de Vencimiento:</label>
+                <span id="detalleEstadoVencimiento" class="valor-detalle">-</span>
+              </div>
+            </div>
+            
+            <!-- Fechas -->
+            <div class="detalle-grupo">
+              <h3><i class="fas fa-calendar-alt"></i> Fechas</h3>
+              <div class="detalle-item">
+                <label>Fecha y Hora de Retiro:</label>
+                <span id="detalleFecha" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Registrado hace:</label>
+                <span id="detalleTiempoTranscurrido" class="valor-detalle">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Fecha Estimada de Retorno:</label>
+                <span id="detalleFechaRetorno" class="valor-detalle">-</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Contenido de Edición -->
-      <div id="contenidoEditar" class="tab-content">
-        <div class="formulario-edicion">
-          <div class="form-group">
-            <label for="editarEstado"><i class="fas fa-flag"></i> Nuevo Estado *</label>
-            <select id="editarEstado" class="form-control">
-              <option value="">Seleccione nuevo estado...</option>
-            </select>
+        
+        <!-- Contenido de Edición -->
+        <div id="contenidoEditar" class="tab-content">
+          <div class="formulario-edicion">
+            <div class="form-group">
+              <label for="editarEstado"><i class="fas fa-flag"></i> Nuevo Estado *</label>
+              <select id="editarEstado" class="form-control">
+                <option value="">Seleccione nuevo estado...</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="editarObservaciones"><i class="fas fa-sticky-note"></i> Observaciones (Opcional)</label>
+              <textarea 
+                id="editarObservaciones" 
+                class="form-control" 
+                placeholder="Agregue observaciones sobre el cambio de estado..."
+                rows="4"
+              ></textarea>
+            </div>
+            
+            <div class="resumen-cambio">
+              <h4><i class="fas fa-sync-alt"></i> Resumen del Cambio</h4>
+              <div class="cambio-estado">
+                <span id="estadoActualTexto" class="badge badge-warning">En Revisión</span>
+                <i class="fas fa-arrow-right"></i>
+                <span id="estadoNuevoTexto" class="badge badge-info">Seleccione estado</span>
+              </div>
+            </div>
           </div>
-          
-          <div class="form-group">
-            <label for="editarObservaciones"><i class="fas fa-sticky-note"></i> Observaciones (Opcional)</label>
-            <textarea 
-              id="editarObservaciones" 
-              class="form-control" 
-              placeholder="Agregue observaciones sobre el cambio de estado..."
-              rows="4"
-            ></textarea>
-          </div>
-          
-          <div class="resumen-cambio">
-            <h4><i class="fas fa-sync-alt"></i> Resumen del Cambio</h4>
-            <div class="cambio-estado">
-              <span id="estadoActualTexto" class="badge badge-warning">En Revisión</span>
-              <i class="fas fa-arrow-right"></i>
-              <span id="estadoNuevoTexto" class="badge badge-info">Seleccione estado</span>
+        </div>
+        
+        <!-- Contenido de Historial -->
+        <div id="contenidoHistorial" class="tab-content">
+          <div class="historial-container">
+            <h3><i class="fas fa-exchange-alt"></i> Historial de Cambios de Estado</h3>
+            
+            <div id="listaObservaciones" class="lista-observaciones">
+              <div class="cargando-historial">
+                <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+              </div>
+            </div>
+            
+            <div id="sinObservaciones" class="sin-observaciones" style="display: none;">
+              <div class="mensaje-vacio">
+                <i class="fas fa-inbox"></i>
+                <p>No hay cambios de estado registrados</p>
+                <small>Los cambios que realices aparecerán aquí</small>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <!-- Contenido de Historial -->
-      <div id="contenidoHistorial" class="tab-content">
-        <div class="historial-container">
-          <h3><i class="fas fa-exchange-alt"></i> Historial de Cambios de Estado</h3>
-          
-          <div id="listaObservaciones" class="lista-observaciones">
-            <div class="cargando-historial">
-              <i class="fas fa-spinner fa-spin"></i> Cargando historial...
-            </div>
-          </div>
-          
-          <div id="sinObservaciones" class="sin-observaciones" style="display: none;">
-            <div class="mensaje-vacio">
-              <i class="fas fa-inbox"></i>
-              <p>No hay cambios de estado registrados</p>
-              <small>Los cambios que realices aparecerán aquí</small>
-            </div>
-          </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="cerrarModalDetalles()">
+          <i class="fas fa-times"></i> Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="guardarCambioEstado()" id="btnGuardarCambio">
+          <i class="fas fa-save"></i> Guardar Cambio
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MODAL CONFIRMACIÓN SIMPLE -->
+  <div id="modalConfirmar" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-body">
+        <div style="text-align: center;padding: 30px; margin-top: -40px;">
+          <i class="fas fa-question-circle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
+          <h3 style="margin-bottom: 16px; color: var(--gray-800);">Confirmar Cambio</h3>
+          <p id="confirmarMensaje" style="color: var(--gray-600); margin-bottom: 24px; line-height: 1.5;">
+            ¿Está seguro de realizar esta acción?
+          </p>
         </div>
       </div>
-    </div>
-    
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="cerrarModalDetalles()">
-        <i class="fas fa-times"></i> Cerrar
-      </button>
-      <button type="button" class="btn btn-primary" onclick="guardarCambioEstado()" id="btnGuardarCambio">
-        <i class="fas fa-save"></i> Guardar Cambio
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CONFIRMACIÓN SIMPLE -->
-<div id="modalConfirmar" class="modal">
-  <div class="modal-content modal-small">
-    <div class="modal-body">
-      <div style="text-align: center;padding: 30px; margin-top: -40px;">
-        <i class="fas fa-question-circle" style="font-size: 48px; color: var(--warning); margin-bottom: 16px;"></i>
-        <h3 style="margin-bottom: 16px; color: var(--gray-800);">Confirmar Cambio</h3>
-        <p id="confirmarMensaje" style="color: var(--gray-600); margin-bottom: 24px; line-height: 1.5;">
-          ¿Está seguro de realizar esta acción?
-        </p>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="cancelarConfirmacion()">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="aceptarConfirmacion()">
+          <i class="fas fa-check"></i> Aceptar
+        </button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="cancelarConfirmacion()">
-        <i class="fas fa-times"></i> Cancelar
-      </button>
-      <button type="button" class="btn btn-primary" onclick="aceptarConfirmacion()">
-        <i class="fas fa-check"></i> Aceptar
-      </button>
-    </div>
   </div>
-</div>
-
+  
   <?!= HtmlService.createHtmlOutputFromFile('functions/auth').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/auxiliars').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/confirmation').getContent(); ?>
@@ -466,6 +589,7 @@
   <?!= HtmlService.createHtmlOutputFromFile('functions/observations').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/tablehistory').getContent(); ?>
   <?!= HtmlService.createHtmlOutputFromFile('functions/variables').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('functions/vencidos').getContent(); ?>
   
 </body>
 </html>

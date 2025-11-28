@@ -164,11 +164,13 @@ body {
 .navbar {
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
-  padding: 16px 24px;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-sm);
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .navbar-brand {
@@ -180,14 +182,70 @@ body {
   color: var(--gray-900);
 }
 
-.navbar-icon {
-  font-size: 24px;
+/* Nuevo menú de navegación */
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+.nav-btn.active {
+  background: var(--yellow-light);
+  color: var(--gray-900);
+  border-color: var(--primary-yellow);
+}
+
+.nav-btn i {
+  font-size: 16px;
+}
+
+/* Badge contador en navbar */
+.badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--error);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .navbar-user {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.navbar-icon {
+  font-size: 24px;
 }
 
 /* ============================================================
@@ -312,6 +370,9 @@ body {
   font-weight: 600;
   color: var(--gray-900);
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .table-responsive {
@@ -710,6 +771,280 @@ tbody tr:hover {
 }
 
 /* ============================================================
+   ESTILOS HISTORIAL VENCIDOS
+   ============================================================ */
+
+/* Estadísticas vencidos */
+.stats-vencidos .stat-card-danger {
+  border-left: 4px solid var(--error);
+}
+
+/* Filtros y búsqueda */
+.filtro-vencidos {
+  display: flex;
+  align-items: center;
+}
+
+.form-control-sm {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font-family);
+  background: var(--white);
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.form-control-sm:focus {
+  outline: none;
+  border-color: var(--primary-yellow);
+  box-shadow: 0 0 0 3px rgba(253, 185, 19, 0.1);
+}
+
+/* Header de tabla con acciones */
+.table-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.table-header-actions h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.busqueda-vencidos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 250px;
+}
+
+.busqueda-vencidos i {
+  color: var(--gray-400);
+}
+
+.busqueda-vencidos input {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-family);
+}
+
+.busqueda-vencidos input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Filas de vencidos con colores */
+.fila-vencido-critico {
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.fila-vencido-critico:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.fila-vencido-alto {
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+.fila-vencido-alto:hover {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.fila-vencido-medio {
+  background: rgba(59, 130, 246, 0.03) !important;
+}
+
+.fila-vencido-medio:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Badge días vencido */
+.badge-dias-vencido {
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+/* Acciones en tabla */
+.acciones-vencido {
+  display: flex;
+  gap: 8px;
+}
+
+/* Paginación */
+.paginacion-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.btn-paginacion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-paginacion:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--primary-yellow);
+}
+
+.btn-paginacion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagina-info {
+  font-size: 14px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+/* ============================================================
+   RESPONSIVE HISTORIAL VENCIDOS
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  
+  .navbar-menu {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    border-top: 1px solid var(--gray-200);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  
+  .nav-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 8px;
+  }
+  
+  .nav-btn span {
+    font-size: 12px;
+  }
+  
+  .navbar-user {
+    order: 2;
+  }
+  
+  .navbar-brand {
+    order: 1;
+  }
+  
+  .stats-vencidos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .table-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .busqueda-vencidos {
+    min-width: 100%;
+  }
+  
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .content-header > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .filtro-vencidos {
+    flex: 1;
+  }
+  
+  .form-control-sm {
+    width: 100%;
+  }
+  
+  .paginacion-container {
+    flex-wrap: wrap;
+  }
+  
+  .acciones-vencido {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .acciones-vencido .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Ocultar columnas menos importantes en móvil */
+  #tablaVencidos th:nth-child(3),
+  #tablaVencidos td:nth-child(3),
+  #tablaVencidos th:nth-child(7),
+  #tablaVencidos td:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-vencidos {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-btn i {
+    font-size: 18px;
+  }
+  
+  .nav-btn span {
+    display: none;
+  }
+  
+  .badge-count {
+    top: -2px;
+    right: -2px;
+  }
+  
+  /* Ocultar más columnas en pantallas pequeñas */
+  #tablaVencidos th:nth-child(4),
+  #tablaVencidos td:nth-child(4) {
+    display: none;
+  }
+}
+
+/* ============================================================
    COMPONENTES REUTILIZABLES PARA MODALES
    ============================================================ */
 
@@ -895,54 +1230,6 @@ textarea.form-control {
 .badge-success { background: rgba(34, 197, 94, 0.15); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
 .badge-error { background: rgba(239, 68, 68, 0.15); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.3); }
 .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--info); border: 1px solid rgba(59, 130, 246, 0.3); }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .tabs {
-    flex-direction: column;
-  }
-  
-  .tab-btn {
-    justify-content: center;
-    border-bottom: none;
-    border-left: 2px solid transparent;
-  }
-  
-  .tab-btn.active {
-    border-left-color: var(--primary-yellow);
-    border-bottom-color: transparent;
-  }
-  
-  .detalles-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .detalle-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  
-  .detalle-item label {
-    flex: none;
-  }
-  
-  .valor-detalle {
-    text-align: left;
-    flex: none;
-    width: 100%;
-  }
-  
-  .cambio-estado {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .cambio-estado .fas.fa-arrow-right {
-    transform: rotate(90deg);
-  }
-}
 
 /* ============================================================
    HISTORIAL DE OBSERVACIONES
