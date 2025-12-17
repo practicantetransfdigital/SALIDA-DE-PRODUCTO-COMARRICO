@@ -15,8 +15,6 @@ Aplicación web desarrollada para el **registro, control y seguimiento de salida
 - [👥 Roles de Usuario](#️-roles-de-usuario)
 - [📈 Procesos Automatizados](#-procesos-automatizados)
 - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
-- [🚀 Instalación y Configuración](#-instalación-y-configuración)
-- [📜 Licencia](#-licencia)
 
 ---
 
