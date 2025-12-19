@@ -144,18 +144,26 @@ Estos procesos se ejecutan mediante **triggers de Google Apps Script**.
 ## Estructura del Proyecto
 
 ```text
-SALIDA-DE-PRODUCTO-COMARRICO/
-│
-├── backend/
-│   └── Code.js
-│
+CLASP - DDBJ/
+├── docs/
 ├── html/
-│   └── index.html
-│
-├── functions/
-│   ├── Functform.html
-│   └── vencidos.html
-│
+│   ├── index.html
+│   └── styles.html
+├── JavaScript/
+│   ├── Functions/
+│   │   ├── Auth.html
+│   │   ├── listenCtpips.html
+│   │   └── Utils.html
+│   ├── Panels/
+│   │   ├── loadData.html
+│   │   ├── Modals.html
+│   │   ├── panelValidate.html
+│   │   ├── reaprove.html
+│   │   └── Validate.html
+│   └── Code.js
+├── .clasp.json
+├── appsscript.json
+├── Code.js
 └── README.md
 ```
 
