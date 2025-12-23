@@ -215,6 +215,7 @@ function guardarRegistro(event) {
   const tipoPlaga = document.getElementById('tipoPlaga').value;
   const responsable = document.getElementById('responsable').value.trim();
   const pasillo = document.getElementById('pasillo').value.trim();
+  const cantidad = document.getElementById('cantidad').value.trim();
   const estado = document.getElementById('estado').value;
   
   // 🎯 NORMALIZAR DATOS ANTES DE ENVIAR
@@ -226,6 +227,7 @@ function guardarRegistro(event) {
     'Tipo de Plaga/Hallazgo': tipoPlaga,
     'Responsable': responsable,
     'Pasillo/Ubicación': normalizarUbicacion(pasillo), // 🎯 AQUÍ SE NORMALIZA
+    'Cantidad': cantidad,
     'Fecha Estimada de Retorno': fechaRetornoValor,
     'Estado': estado
   };

@@ -52,6 +52,7 @@ function guardarEdicionCompleta(event) {
   const tipoPlaga = document.getElementById('editTipoPlaga').value.trim();
   const responsable = document.getElementById('editResponsable').value.trim();
   const pasillo = document.getElementById('editPasillo').value.trim();
+  const cantidad = document.getElementById('cantidad').value.trim();
   const fechaRetornoInput = document.getElementById('editFechaRetorno').value;
   const fechaRetiroInput = document.getElementById('editFechaRetiro').value;
   
@@ -110,6 +111,7 @@ function guardarEdicionCompleta(event) {
     'Tipo de Plaga/Hallazgo': tipoPlaga,
     'Responsable': responsable,
     'Pasillo/Ubicación': pasilloNormalizado, // 🎯 AQUÍ SE NORMALIZA
+    'Cantidad': cantidad,
     'Tiempo Estimado de Retorno': fechaRetornoFormateada,
     'Fecha y Hora de Retiro': fechaRetiroFormateada
   };

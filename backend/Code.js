@@ -303,6 +303,7 @@ function registrarSalida(datos) {
       fechaFormateada,
       (datos['Responsable'] || '').toString().trim(),
       datos['Pasillo/Ubicación'] || '',
+      datos['Cantidad'] || '',
       fechaRetornoFormateada,
       estado
     ];
@@ -352,7 +353,7 @@ function actualizarEstadoRegistro(id, nuevoEstado, observaciones = '', usuario =
     // Buscar la fila con el ID
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] == id) {
-        estadoAnterior = data[i][10] || 'Desconocido';
+        estadoAnterior = data[i][11] || 'Desconocido';
         filaIndex = i + 1;
         break;
       }
@@ -366,7 +367,7 @@ function actualizarEstadoRegistro(id, nuevoEstado, observaciones = '', usuario =
     }
     
     // 1. Actualizar estado
-    sheet.getRange(filaIndex, 11).setValue(nuevoEstado);
+    sheet.getRange(filaIndex, 12).setValue(nuevoEstado);
     
     // 2. Si es devolución, guardar DevueltoA
     if (nuevoEstado.toLowerCase() === 'devuelto' && devueltoA) {
@@ -374,7 +375,7 @@ function actualizarEstadoRegistro(id, nuevoEstado, observaciones = '', usuario =
       if (devueltoAIndex !== -1) {
         sheet.getRange(filaIndex, devueltoAIndex + 1).setValue(devueltoA);
       } else {
-        sheet.getRange(filaIndex, 12).setValue(devueltoA);
+        sheet.getRange(filaIndex, 13).setValue(devueltoA);
       }
     }
     
@@ -570,8 +571,9 @@ function actualizarRegistroCompleto(datosActualizados) {
       'Tipo de Salida': 5,       // Columna E
       'Tipo de Plaga/Hallazgo': 6, // Columna F
       'Responsable': 8,          // Columna H
-      'Pasillo/Ubicación': 9,    // Columna I
-      'Tiempo Estimado de Retorno': 10, // Columna J
+      'Pasillo/Ubicación': 9, 
+      'Cantidad': 10,   // Columna I
+      'Tiempo Estimado de Retorno': 11, // Columna J
       'Fecha y Hora de Retiro': 7      // Columna G
     };
     

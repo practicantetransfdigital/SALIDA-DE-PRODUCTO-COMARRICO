@@ -14,7 +14,26 @@ function cargarTabla(registros) {
     return;
   }
   
-  registros.forEach(registro => {
+  // FILTRO: Solo mostrar registros que NO tengan estado "Vencido"
+  const registrosNoVencidos = registros.filter(registro => {
+    const estado = registro.Estado?.toLowerCase() || '';
+    return estado !== 'vencido';
+  });
+  
+  // Si después del filtro no hay registros
+  if (registrosNoVencidos.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; color: var(--gray-400); padding: 40px;">
+          No hay registros activos (todos están vencidos)
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Mostrar solo los NO vencidos
+  registrosNoVencidos.forEach(registro => {
     const tr = document.createElement('tr');
     const estadoBadge = obtenerBadgeEstado(registro.Estado);
     

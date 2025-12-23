@@ -18,6 +18,7 @@ Tipo de Plaga: ${registro['Tipo de Plaga/Hallazgo'] || 'N/A'}
 Fecha: ${formatearFecha(registro['Fecha y Hora de Retiro'])}
 Responsable: ${registro.Responsable || '-'}
 Pasillo: ${registro['Pasillo/Ubicación'] || '-'}
+Cantidad: ${registro['Cantidad'] || '-'}
 Estado: ${registro.Estado || '-'}
     `.trim();
     
@@ -97,6 +98,7 @@ function llenarDetallesRegistro(registro) {
   // Clasificación
   document.getElementById('detalleTipoSalida').textContent = registro['Tipo de Salida'] || '-';
   document.getElementById('detalleTipoPlaga').textContent = registro['Tipo de Plaga/Hallazgo'] || 'N/A';
+  document.getElementById('detallecantidad').textContent = registro['Cantidad'] || 'N/A';
   
   // Estado - CORREGIDO: usar solo el estado sin fecha para el badge principal
   const estadoElement = document.getElementById('detalleEstado');

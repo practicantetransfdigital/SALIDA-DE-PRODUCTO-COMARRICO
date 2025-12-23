@@ -362,6 +362,11 @@
             <label for="pasillo"><i class="fas fa-map-marker-alt"></i> Pasillo/Ubicación *</label>
             <input type="text" id="pasillo" placeholder="Ingrese la ubicación" required>
           </div>
+
+          <div class="form-group">
+            <label for="cantidad"><i class="fa-solid fa-scale-unbalanced-flip"></i> Cantidad *</label>
+            <input type="text" id="cantidad" placeholder="Ingrese la cantidad" required>
+          </div>
           
           <div class="form-group">
             <label for="fechaRetorno"><i class="fas fa-calendar-day"></i> Fecha Estimada de Retorno *</label>
@@ -456,6 +461,10 @@
               <div class="detalle-item">
                 <label>Estado Actual:</label>
                 <span id="detalleEstado" class="badge">-</span>
+              </div>
+              <div class="detalle-item">
+                <label>Cantidad de producto:</label>
+                <span id="detallecantidad" class="valor-detalle">-</span>
               </div>
               <div class="detalle-item">
                 <label>Devuelto a:</label>
@@ -663,7 +672,7 @@
   <div class="modal-content modal-medium">
     <div class="modal-header">
       <h2><i class="fas fa-undo-alt"></i> Registro de Devolución</h2>
-      <button class="close-btn" onclick="cerrarModalDevolucion()">
+      <button class="modal-close" onclick="cerrarModalDevolucion()">
         <i class="fas fa-times"></i>
       </button>
     </div>
